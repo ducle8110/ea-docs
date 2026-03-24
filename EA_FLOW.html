@@ -176,94 +176,111 @@
 <div class="section bg-overview" id="overview">
   <div class="section-header" onclick="toggleSection(this)">
     <span class="icon">&#128200;</span>
-    <h2 style="color:#58a6ff">Tổng quan - Luồng xử lý mỗi Tick</h2>
+    <h2 style="color:#58a6ff">Tổng quan - EA làm gì mỗi giây?</h2>
     <span class="toggle open">&#9654;</span>
   </div>
   <div class="section-body open">
 
     <div class="info-box">
-      <strong>EA hoạt động thế nào?</strong> Mỗi khi giá thay đổi (mỗi "tick"), EA chạy qua các bước bên dưới theo thứ tự từ trên xuống. Nếu gặp điều kiện dừng (ô đỏ), nó dừng ngay và chờ tick tiếp theo.
+      <strong>Hiểu đơn giản:</strong> Mỗi khi giá thay đổi (gọi là 1 "tick"), EA chạy qua danh sách bên dưới <strong>từ trên xuống</strong>. Gặp dấu &#128683; nghĩa là EA dừng ngay, không làm gì thêm, chờ giá thay đổi tiếp rồi chạy lại từ đầu.
     </div>
 
-    <div class="flow">
-      <div class="flow-step"><div class="flow-box flow-start">&#9654; Mỗi Tick (giá thay đổi)</div></div>
-      <div class="flow-arrow"></div>
+    <div style="max-width:620px;margin:20px auto">
 
-      <div class="flow-step"><div class="flow-box flow-process">&#128202; Cập nhật Dashboard + Vẽ đường pending</div></div>
-      <div class="flow-arrow"></div>
-
-      <div class="flow-step"><div class="flow-box flow-decision">&#127919; Reset Price chạm giá?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
-        <span style="color:#3fb950">&#8594; Đóng tất cả lệnh + Reset &#8594;</span>
-        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      <!-- Bước 1 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">1</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Cập nhật màn hình Dashboard</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Hiện thông tin: số lệnh, lời/lỗ, DD%, trạng thái hedge...</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-decision">&#128293; Đang hedge?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-no" style="padding:2px 8px;border-radius:8px">Không</span>
-        <span style="color:#8b949e">&#8594;</span>
-        <span class="flow-box flow-process" style="padding:6px 12px;font-size:12px">Kiểm tra trigger Virtual Pending</span>
+      <!-- Bước 2 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">2</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Kiểm tra Reset Price</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Nếu user đã đặt giá mục tiêu và giá chạm &#8594; <strong>đóng hết lệnh, chạy lại từ đầu</strong></div>
+          <div style="font-size:12px;color:#f85149;margin-top:4px">&#128683; Nếu chạm &#8594; DỪNG</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-hedge">&#128737; Xử lý Hedge (Cuối tuần + DD)</div></div>
-      <div class="flow-arrow"></div>
-
-      <div class="flow-step"><div class="flow-box flow-action">&#128176; Take Profit (5 loại, LUÔN chạy)</div></div>
-      <div class="flow-arrow"></div>
-
-      <div class="flow-step"><div class="flow-box flow-decision">Đang hedge?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
-        <span style="color:#3fb950">&#8594; Chỉ chạy TP, không vào lệnh mới &#8594;</span>
-        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      <!-- Bước 3 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">3</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Kiểm tra lệnh chờ ảo (Virtual Pending)</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Nếu <strong>không đang hedge</strong>: giá chạm lệnh chờ ảo &#8594; mở lệnh thật + đặt cặp chờ mới</div>
+          <div style="font-size:12px;color:#8b949e;margin-top:4px">&#9757; Bỏ qua bước này nếu đang hedge</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-stop">&#128721; Kiểm tra An toàn (DD%, số lệnh)</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Nguy hiểm</span>
-        <span style="color:#f85149">&#8594; Chặn lệnh mới / Tự động hedge &#8594;</span>
-        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      <!-- Bước 4 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">4</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Kiểm tra Hedge (phòng hộ)</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Thứ 6 gần đóng sàn &#8594; hedge cuối tuần. Lỗ >= 70% &#8594; hedge drawdown</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-decision">Spread quá cao?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
-        <span style="color:#f85149">&#8594;</span>
-        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      <!-- Bước 5 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#1c2d1f;border:1px solid #238636;border-radius:10px;margin-bottom:2px">
+        <div style="background:#238636;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">5</div>
+        <div>
+          <div style="font-weight:600;color:#3fb950">Chốt lời (Take Profit) &#8592; LUÔN chạy</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Kiểm tra 5 loại TP theo thứ tự ưu tiên. <strong>Bước này chạy ngay cả khi đang hedge</strong></div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-decision">Pending bị xa giá?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
-        <span style="color:#d29922">&#8594;</span>
-        <span class="flow-box flow-hedge" style="padding:6px 12px;font-size:12px">Rebuild pending mới</span>
+      <!-- Bước 6 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">6</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Đang hedge?</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Nếu có lệnh hedge đang mở &#8594; không vào lệnh mới nữa</div>
+          <div style="font-size:12px;color:#f85149;margin-top:4px">&#128683; Nếu đang hedge &#8594; DỪNG (chỉ chạy TP ở bước 5)</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-decision">Chưa có pending + EMA cho phép?</div></div>
-      <div class="flow-arrow-branch">
-        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
-        <span style="color:#3fb950">&#8594;</span>
-        <span class="flow-box flow-action" style="padding:6px 12px;font-size:12px">Đặt pending mới</span>
+      <!-- Bước 7 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">7</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Kiểm tra an toàn</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">DD >= 50% &#8594; chặn lệnh mới. DD >= 70% &#8594; tự động hedge. Spread quá cao &#8594; chờ.</div>
+          <div style="font-size:12px;color:#f85149;margin-top:4px">&#128683; Nếu không an toàn &#8594; DỪNG</div>
+        </div>
       </div>
-      <div class="flow-arrow"></div>
 
-      <div class="flow-step"><div class="flow-box flow-start">&#128994; Kết thúc, chờ tick tiếp theo</div></div>
+      <!-- Bước 8 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">8</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Pending bị xa giá?</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Nếu lệnh chờ ảo cách giá hiện tại quá xa (>= 3x StepPip) &#8594; xóa và đặt lại gần giá hơn</div>
+        </div>
+      </div>
+
+      <!-- Bước 9 -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">9</div>
+        <div>
+          <div style="font-weight:600;color:#e6edf3">Chưa có pending + EMA cho phép?</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Nếu chưa có lệnh chờ nào và tín hiệu EMA thuận lợi &#8594; đặt cặp lệnh chờ mới (BUY STOP + SELL STOP)</div>
+        </div>
+      </div>
+
+      <!-- Kết thúc -->
+      <div style="text-align:center;padding:12px;color:#8b949e;font-size:13px;margin-top:8px">
+        &#128260; Chờ tick tiếp theo, lặp lại từ bước 1
+      </div>
+
     </div>
 
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#1f6feb"></div> Bắt đầu/Kết thúc</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#21262d;border:1px solid #30363d"></div> Xử lý</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#1c1e26;border:2px solid #f0b429"></div> Kiểm tra điều kiện</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#238636"></div> Hành động</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div> Dừng lại</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#9e6a03"></div> Phòng hộ</div>
+    <div class="info-box" style="max-width:620px;margin:0 auto">
+      <strong>Tóm tắt:</strong> EA liên tục lặp: cập nhật màn hình &#8594; kiểm tra an toàn &#8594; chốt lời nếu được &#8594; vào lệnh mới nếu an toàn. Khi đang hedge, EA chỉ chạy chốt lời, không vào lệnh mới.
     </div>
   </div>
 </div>
@@ -548,7 +565,7 @@
 
 <div style="text-align:center;padding:30px;color:#8b949e;font-size:13px;border-top:1px solid #21262d;margin-top:40px">
   GoneWithTheWind EA v9.0 | Logic Flow Documentation<br>
-  Tự động cập nhật khi code thay đổi
+  Tự động cập nhật khi code thay đổi | Phiên bản: 2026-03-24
 </div>
 
 <script>
