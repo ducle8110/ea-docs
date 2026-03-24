@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoneWithTheWind EA v9.0 - Logic Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.6; }
+
+  .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 30px; text-align: center; border-bottom: 3px solid #f0b429; }
+  .header h1 { color: #f0b429; font-size: 28px; }
+  .header p { color: #8b949e; margin-top: 8px; }
+  .updated { color: #58a6ff; font-size: 13px; margin-top: 4px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  /* Navigation */
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; justify-content: center; position: sticky; top: 0; background: #0d1117; padding: 12px 0; z-index: 100; border-bottom: 1px solid #21262d; }
+  .nav a { padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+  .nav a:hover { transform: translateY(-2px); }
+  .nav-overview { background: #1f6feb33; color: #58a6ff; border: 1px solid #1f6feb; }
+  .nav-pending { background: #0d419d33; color: #79c0ff; border: 1px solid #0d419d; }
+  .nav-tp { background: #23863533; color: #3fb950; border: 1px solid #238635; }
+  .nav-hedge { background: #9e6a0333; color: #d29922; border: 1px solid #9e6a03; }
+  .nav-safety { background: #da363333; color: #f85149; border: 1px solid #da3633; }
+  .nav-params { background: #8b5cf633; color: #bc8cff; border: 1px solid #8b5cf6; }
+
+  /* Sections */
+  .section { margin: 30px 0; border-radius: 12px; overflow: hidden; border: 1px solid #21262d; }
+  .section-header { padding: 16px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; user-select: none; transition: background 0.2s; }
+  .section-header:hover { filter: brightness(1.2); }
+  .section-header h2 { font-size: 20px; flex: 1; }
+  .section-header .icon { font-size: 24px; }
+  .section-header .toggle { font-size: 18px; transition: transform 0.3s; }
+  .section-header .toggle.open { transform: rotate(90deg); }
+  .section-body { padding: 20px; display: none; }
+  .section-body.open { display: block; }
+
+  .bg-overview { background: #161b22; }
+  .bg-overview .section-header { background: #1f6feb22; }
+  .bg-pending { background: #161b22; }
+  .bg-pending .section-header { background: #0d419d22; }
+  .bg-tp { background: #161b22; }
+  .bg-tp .section-header { background: #23863522; }
+  .bg-hedge { background: #161b22; }
+  .bg-hedge .section-header { background: #9e6a0322; }
+  .bg-safety { background: #161b22; }
+  .bg-safety .section-header { background: #da363322; }
+  .bg-params { background: #161b22; }
+  .bg-params .section-header { background: #8b5cf622; }
+
+  /* Flow chart */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 20px 0; }
+  .flow-step { position: relative; width: 100%; max-width: 500px; }
+  .flow-box { padding: 14px 20px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 500; position: relative; }
+  .flow-arrow { width: 2px; height: 24px; background: #30363d; margin: 0 auto; }
+  .flow-arrow-branch { display: flex; justify-content: center; gap: 4px; align-items: center; color: #8b949e; font-size: 12px; padding: 4px 0; }
+
+  .flow-start { background: #1f6feb; color: white; border-radius: 25px; }
+  .flow-process { background: #21262d; border: 1px solid #30363d; color: #e6edf3; }
+  .flow-decision { background: #1c1e26; border: 2px solid #f0b429; color: #f0b429; transform: none; clip-path: none; padding: 12px 16px; }
+  .flow-action { background: #238636; color: white; }
+  .flow-stop { background: #da3633; color: white; border-radius: 25px; }
+  .flow-hedge { background: #9e6a03; color: white; }
+  .flow-skip { background: #30363d; color: #8b949e; font-style: italic; }
+
+  .flow-label { font-size: 11px; color: #8b949e; position: absolute; top: -10px; right: -60px; background: #0d1117; padding: 2px 6px; border-radius: 4px; }
+
+  /* Branch containers */
+  .flow-branches { display: flex; gap: 20px; justify-content: center; width: 100%; max-width: 700px; }
+  .flow-branch { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .branch-label { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; margin-bottom: 4px; }
+  .label-yes { background: #23863644; color: #3fb950; }
+  .label-no { background: #da363344; color: #f85149; }
+
+  /* TP Priority */
+  .tp-chain { display: flex; flex-direction: column; gap: 0; align-items: center; }
+  .tp-item { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 600px; }
+  .tp-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .tp-card { flex: 1; padding: 12px 16px; border-radius: 8px; background: #21262d; border-left: 4px solid; }
+  .tp-card h4 { font-size: 15px; margin-bottom: 4px; }
+  .tp-card p { font-size: 13px; color: #8b949e; }
+  .tp-card .default { font-size: 12px; color: #58a6ff; margin-top: 4px; }
+  .tp-connector { width: 2px; height: 16px; background: #30363d; margin-left: 15px; }
+
+  .tp1 .tp-num { background: #238636; color: white; }
+  .tp1 .tp-card { border-color: #238636; }
+  .tp2 .tp-num { background: #9e6a03; color: white; }
+  .tp2 .tp-card { border-color: #9e6a03; }
+  .tp3 .tp-num { background: #0d8a9e; color: white; }
+  .tp3 .tp-card { border-color: #0d8a9e; }
+  .tp4 .tp-num { background: #cc4400; color: white; }
+  .tp4 .tp-card { border-color: #cc4400; }
+  .tp5 .tp-num { background: #8b5cf6; color: white; }
+  .tp5 .tp-card { border-color: #8b5cf6; }
+
+  .tp-note { text-align: center; color: #8b949e; font-size: 13px; margin-top: 12px; padding: 8px; background: #21262d; border-radius: 8px; max-width: 600px; }
+
+  /* Hedge diagram */
+  .hedge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .hedge-grid { grid-template-columns: 1fr; } }
+  .hedge-card { background: #21262d; border-radius: 10px; padding: 20px; border-top: 4px solid; }
+  .hedge-weekend { border-color: #f0b429; }
+  .hedge-dd { border-color: #da3633; }
+  .hedge-card h3 { margin-bottom: 12px; }
+  .hedge-card .step { display: flex; gap: 10px; margin: 8px 0; align-items: flex-start; }
+  .hedge-card .step-num { width: 24px; height: 24px; border-radius: 50%; background: #30363d; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .hedge-card .step-text { font-size: 14px; }
+
+  .rule-box { background: #1c1e26; border: 1px solid #f0b42944; border-radius: 8px; padding: 14px; margin-top: 16px; }
+  .rule-box h4 { color: #f0b429; margin-bottom: 8px; font-size: 14px; }
+  .rule-box li { font-size: 13px; margin: 4px 0; margin-left: 16px; }
+
+  /* Safety */
+  .safety-layers { display: flex; flex-direction: column; gap: 0; align-items: center; }
+  .safety-layer { width: 100%; max-width: 600px; padding: 16px; border-radius: 8px; text-align: center; position: relative; }
+  .safety-connector { width: 2px; height: 16px; margin: 0 auto; }
+  .layer-green { background: #23863622; border: 1px solid #238636; }
+  .layer-green .safety-connector { background: #238636; }
+  .layer-yellow { background: #9e6a0322; border: 1px solid #9e6a03; }
+  .layer-yellow .safety-connector { background: #9e6a03; }
+  .layer-red { background: #da363322; border: 1px solid #da3633; }
+  .layer-red .safety-connector { background: #da3633; }
+  .safety-label { font-weight: 700; font-size: 18px; }
+  .safety-desc { font-size: 13px; color: #8b949e; margin-top: 4px; }
+  .safety-action { font-size: 14px; color: #e6edf3; margin-top: 6px; font-weight: 500; }
+
+  /* Params table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #21262d; padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid #30363d; }
+  td { padding: 10px 14px; border-bottom: 1px solid #21262d; }
+  tr:hover td { background: #161b2288; }
+  .param-group { background: #1f6feb22; color: #58a6ff; font-weight: 700; }
+  .param-group td { border-bottom: 2px solid #1f6feb44; }
+
+  /* Pending diagram */
+  .pending-visual { background: #161b22; border-radius: 10px; padding: 20px; margin: 16px 0; text-align: center; }
+  .price-line { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
+  .price-bar { height: 3px; flex: 1; max-width: 200px; border-radius: 2px; }
+  .price-label { font-size: 13px; font-weight: 600; min-width: 120px; }
+  .price-value { font-size: 13px; color: #8b949e; min-width: 80px; }
+  .bar-buy { background: #58a6ff; }
+  .bar-sell { background: #f85149; }
+  .bar-mid { background: #8b949e; border-style: dashed; }
+  .bar-anchor { background: #f0b429; }
+
+  .info-box { background: #21262d; border-radius: 8px; padding: 14px; margin: 12px 0; font-size: 14px; }
+  .info-box strong { color: #58a6ff; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 16px 0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GoneWithTheWind EA v9.0</h1>
+  <p>Virtual Pending System - Sơ đồ luồng xử lý</p>
+  <div class="updated">Cập nhật: 2026-03-24</div>
+</div>
+
+<div class="container">
+
+<nav class="nav">
+  <a href="#overview" class="nav-overview" onclick="openSection('overview')">Tổng quan</a>
+  <a href="#pending" class="nav-pending" onclick="openSection('pending')">Lệnh chờ ảo</a>
+  <a href="#tp" class="nav-tp" onclick="openSection('tp')">Chốt lời</a>
+  <a href="#hedge" class="nav-hedge" onclick="openSection('hedge')">Phòng hộ</a>
+  <a href="#safety" class="nav-safety" onclick="openSection('safety')">An toàn</a>
+  <a href="#params" class="nav-params" onclick="openSection('params')">Tham số</a>
+</nav>
+
+<!-- ==================== OVERVIEW ==================== -->
+<div class="section bg-overview" id="overview">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#128200;</span>
+    <h2 style="color:#58a6ff">Tổng quan - Luồng xử lý mỗi Tick</h2>
+    <span class="toggle open">&#9654;</span>
+  </div>
+  <div class="section-body open">
+
+    <div class="info-box">
+      <strong>EA hoạt động thế nào?</strong> Mỗi khi giá thay đổi (mỗi "tick"), EA chạy qua các bước bên dưới theo thứ tự từ trên xuống. Nếu gặp điều kiện dừng (ô đỏ), nó dừng ngay và chờ tick tiếp theo.
+    </div>
+
+    <div class="flow">
+      <div class="flow-step"><div class="flow-box flow-start">&#9654; Mỗi Tick (giá thay đổi)</div></div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-process">&#128202; Cập nhật Dashboard + Vẽ đường pending</div></div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">&#127919; Reset Price chạm giá?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
+        <span style="color:#3fb950">&#8594; Đóng tất cả lệnh + Reset &#8594;</span>
+        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">&#128293; Đang hedge?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-no" style="padding:2px 8px;border-radius:8px">Không</span>
+        <span style="color:#8b949e">&#8594;</span>
+        <span class="flow-box flow-process" style="padding:6px 12px;font-size:12px">Kiểm tra trigger Virtual Pending</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-hedge">&#128737; Xử lý Hedge (Cuối tuần + DD)</div></div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-action">&#128176; Take Profit (5 loại, LUÔN chạy)</div></div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">Đang hedge?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
+        <span style="color:#3fb950">&#8594; Chỉ chạy TP, không vào lệnh mới &#8594;</span>
+        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-stop">&#128721; Kiểm tra An toàn (DD%, số lệnh)</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Nguy hiểm</span>
+        <span style="color:#f85149">&#8594; Chặn lệnh mới / Tự động hedge &#8594;</span>
+        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">Spread quá cao?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
+        <span style="color:#f85149">&#8594;</span>
+        <span class="flow-box flow-stop" style="padding:6px 12px;font-size:12px">DỪNG</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">Pending bị xa giá?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
+        <span style="color:#d29922">&#8594;</span>
+        <span class="flow-box flow-hedge" style="padding:6px 12px;font-size:12px">Rebuild pending mới</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-decision">Chưa có pending + EMA cho phép?</div></div>
+      <div class="flow-arrow-branch">
+        <span class="label-yes" style="padding:2px 8px;border-radius:8px">Có</span>
+        <span style="color:#3fb950">&#8594;</span>
+        <span class="flow-box flow-action" style="padding:6px 12px;font-size:12px">Đặt pending mới</span>
+      </div>
+      <div class="flow-arrow"></div>
+
+      <div class="flow-step"><div class="flow-box flow-start">&#128994; Kết thúc, chờ tick tiếp theo</div></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#1f6feb"></div> Bắt đầu/Kết thúc</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#21262d;border:1px solid #30363d"></div> Xử lý</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1c1e26;border:2px solid #f0b429"></div> Kiểm tra điều kiện</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#238636"></div> Hành động</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div> Dừng lại</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9e6a03"></div> Phòng hộ</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VIRTUAL PENDING ==================== -->
+<div class="section bg-pending" id="pending">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#128205;</span>
+    <h2 style="color:#79c0ff">Virtual Pending - Hệ thống lệnh chờ ảo</h2>
+    <span class="toggle">&#9654;</span>
+  </div>
+  <div class="section-body">
+
+    <div class="info-box">
+      <strong>Virtual Pending là gì?</strong> Thay vì đặt lệnh pending thật trên sàn (broker), EA đặt lệnh "ảo" trong bộ nhớ. Khi giá chạm mức đặt, EA tự động mở lệnh market thật. Ưu điểm: nhanh hơn, không bị broker từ chối.
+    </div>
+
+    <div class="pending-visual">
+      <h3 style="margin-bottom:16px;color:#79c0ff">Cách đặt lệnh</h3>
+      <div class="price-line">
+        <span class="price-label" style="color:#58a6ff">&#9650; BUY STOP</span>
+        <div class="price-bar bar-buy"></div>
+        <span class="price-value">Anchor + StepPip</span>
+      </div>
+      <div class="price-line">
+        <span class="price-label" style="color:#f0b429">&#9670; Anchor (Giá neo)</span>
+        <div class="price-bar bar-anchor"></div>
+        <span class="price-value">Position gần nhất</span>
+      </div>
+      <div class="price-line">
+        <span class="price-label" style="color:#f85149">&#9660; SELL STOP</span>
+        <div class="price-bar bar-sell"></div>
+        <span class="price-value">Anchor - StepPip</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div class="info-box">
+        <strong>Khi giá lên chạm BUY STOP:</strong><br>
+        1. Mở lệnh BUY thật<br>
+        2. Xóa cặp pending cũ<br>
+        3. Đặt cặp pending mới (quanh vị trí hiện tại)
+      </div>
+      <div class="info-box">
+        <strong>Khi giá xuống chạm SELL STOP:</strong><br>
+        1. Mở lệnh SELL thật<br>
+        2. Xóa cặp pending cũ<br>
+        3. Đặt cặp pending mới (quanh vị trí hiện tại)
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-top:16px">
+      <strong>Rebuild Pending:</strong> Khi giá chạy xa pending (>= 3x StepPip), EA tự động xóa pending cũ và đặt lại pending mới gần giá hiện tại. Điều này đảm bảo pending luôn "theo sát" giá.
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAKE PROFIT ==================== -->
+<div class="section bg-tp" id="tp">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#128176;</span>
+    <h2 style="color:#3fb950">Take Profit - 5 loại chốt lời</h2>
+    <span class="toggle">&#9654;</span>
+  </div>
+  <div class="section-body">
+
+    <div class="info-box">
+      <strong>Thứ tự ưu tiên:</strong> EA kiểm tra từng loại TP từ trên xuống. Nếu loại nào thành công thì dừng lại, KHÔNG kiểm tra tiếp các loại dưới.
+    </div>
+
+    <div class="tp-chain">
+      <div class="tp-item tp1">
+        <div class="tp-num">1</div>
+        <div class="tp-card">
+          <h4 style="color:#3fb950">&#128640; Full TP (Cluster)</h4>
+          <p>Đóng <strong>TẤT CẢ</strong> lệnh khi tổng lời của mọi lệnh cộng lại >= ngưỡng</p>
+          <div class="default">Mặc định: $1.50</div>
+        </div>
+      </div>
+      <div class="tp-connector"></div>
+
+      <div class="tp-item tp2">
+        <div class="tp-num">2</div>
+        <div class="tp-card">
+          <h4 style="color:#d29922">&#128257; Partial TP</h4>
+          <p>Đóng <strong>3 lệnh</strong> (2 cùng hướng + 1 ngược hướng) khi tổng lời >= ngưỡng</p>
+          <div class="default">Mặc định: $0.50</div>
+        </div>
+      </div>
+      <div class="tp-connector"></div>
+
+      <div class="tp-item tp3">
+        <div class="tp-num">3</div>
+        <div class="tp-card">
+          <h4 style="color:#0d8a9e">&#9989; Single TP</h4>
+          <p>Đóng <strong>1 lệnh</strong> lời nhất khi chỉ còn <strong>1 hướng</strong> (chỉ BUY hoặc chỉ SELL)</p>
+          <div class="default">Mặc định: $0.05</div>
+        </div>
+      </div>
+      <div class="tp-connector"></div>
+
+      <div class="tp-item tp4">
+        <div class="tp-num">4</div>
+        <div class="tp-card">
+          <h4 style="color:#cc4400">&#128207; Step TP</h4>
+          <p>Đóng lệnh khi lời tính theo <strong>pip</strong> >= X lần StepPip (khoảng cách pending)</p>
+          <div class="default">Mặc định: 5 x 150 = 750 pip</div>
+        </div>
+      </div>
+      <div class="tp-connector"></div>
+
+      <div class="tp-item tp5">
+        <div class="tp-num">5</div>
+        <div class="tp-card">
+          <h4 style="color:#8b5cf6">&#128256; Fib 50% TP</h4>
+          <p>Tìm 2 lệnh <strong>cùng hướng</strong> có entry xa nhau nhất, đóng khi tổng lời >= ngưỡng</p>
+          <div class="default">Mặc định: $0.05 (TẮT)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp-note">
+      &#128161; Sau mỗi lần TP, EA tự động đặt lại cặp pending mới (PlacePendingPair)
+    </div>
+  </div>
+</div>
+
+<!-- ==================== HEDGE ==================== -->
+<div class="section bg-hedge" id="hedge">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#128737;</span>
+    <h2 style="color:#d29922">Hedge - Bảo vệ tài khoản</h2>
+    <span class="toggle">&#9654;</span>
+  </div>
+  <div class="section-body">
+
+    <div class="info-box">
+      <strong>Hedge là gì?</strong> Khi có nhiều lệnh BUY hơn SELL (hoặc ngược lại), EA đặt lệnh ngược lại để <strong>cân bằng</strong>. VD: Có 10 lot BUY + 7 lot SELL &#8594; Đặt SELL 3 lot để cân.
+    </div>
+
+    <div class="hedge-grid">
+      <div class="hedge-card hedge-weekend">
+        <h3 style="color:#f0b429">&#127764; Weekend Hedge</h3>
+        <p style="color:#8b949e;margin-bottom:12px">Bảo vệ khỏi gap cuối tuần</p>
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Thứ 6, 2h trước đóng sàn</strong> &#8594; EA kiểm tra</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Tính chênh lệch lot BUY vs SELL</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Đặt lệnh ngược để <strong>cân bằng</strong></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Xóa pending ảo, ngừng vào lệnh mới</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text"><strong>Thứ 2:</strong> Đóng hedge (bù lỗ nếu cần)</div></div>
+      </div>
+
+      <div class="hedge-card hedge-dd">
+        <h3 style="color:#f85149">&#128680; DD Hedge (Drawdown)</h3>
+        <p style="color:#8b949e;margin-bottom:12px">Bảo vệ khi lỗ quá nhiều</p>
+        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>DD >= 70%</strong> balance &#8594; Tự động kích hoạt</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Cân bằng lot tương tự Weekend</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Ngừng vào lệnh mới (chỉ chạy TP)</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text"><strong>User tự đóng tay</strong> trên MT5</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text">DD giảm < 50% &#8594; cho phép hedge lại nếu cần</div></div>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <h4>&#9888; Quy tắc chống trùng:</h4>
+      <ul>
+        <li>Chỉ có <strong>1 hedge</strong> tại một thời điểm (Weekend HOẶC DD, KHÔNG cả hai)</li>
+        <li>Mỗi đợt DD chỉ hedge <strong>1 lần</strong> - nếu user đóng tay, EA <strong>KHÔNG đặt lại</strong></li>
+        <li>Chỉ reset khi DD giảm xuống < 50%, sau đó DD lên lại 70% mới hedge tiếp</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SAFETY ==================== -->
+<div class="section bg-safety" id="safety">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#128721;</span>
+    <h2 style="color:#f85149">An toàn - Safety Layer</h2>
+    <span class="toggle">&#9654;</span>
+  </div>
+  <div class="section-body">
+
+    <div class="info-box">
+      <strong>DD% = |Lỗ| / Balance x 100%</strong><br>
+      VD: Balance $1000, đang lỗ $300 &#8594; DD = 30%
+    </div>
+
+    <div class="safety-layers">
+      <div class="safety-layer layer-green">
+        <div class="safety-label" style="color:#3fb950">DD 0% - 49%</div>
+        <div class="safety-desc">Bình thường</div>
+        <div class="safety-action">&#128994; Giao dịch bình thường, đặt lệnh tự do</div>
+      </div>
+      <div class="safety-connector" style="background:#238636"></div>
+
+      <div class="safety-layer layer-yellow">
+        <div class="safety-label" style="color:#d29922">DD 50% - 69%</div>
+        <div class="safety-desc">Cảnh báo</div>
+        <div class="safety-action">&#128992; DỪNG vào lệnh mới, chỉ chạy TP để giảm lỗ</div>
+      </div>
+      <div class="safety-connector" style="background:#9e6a03"></div>
+
+      <div class="safety-layer layer-red">
+        <div class="safety-label" style="color:#f85149">DD >= 70%</div>
+        <div class="safety-desc">Nguy hiểm</div>
+        <div class="safety-action">&#128308; TỰ ĐỘNG HEDGE + Dừng vào lệnh mới</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <h3 style="margin-bottom:12px">Các kiểm tra khác:</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="info-box">
+          <strong>&#128680; Emergency TP</strong><br>
+          Khi số lệnh đạt 90% giới hạn VÀ đang lời &#8594; Đóng tất cả để chốt lời
+        </div>
+        <div class="info-box">
+          <strong>&#128695; Spread cao</strong><br>
+          Khi spread > MaxSpreadPip &#8594; Tạm dừng giao dịch, chờ spread giảm
+        </div>
+        <div class="info-box">
+          <strong>&#128683; Cả 2 hướng đầy</strong><br>
+          BUY đạt MaxPerSide VÀ SELL đạt MaxPerSide &#8594; Dừng hoàn toàn
+        </div>
+        <div class="info-box">
+          <strong>&#127919; Reset Price</strong><br>
+          User đặt giá mục tiêu &#8594; Khi giá chạm, đóng hết lệnh + chạy lại từ đầu
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PARAMS ==================== -->
+<div class="section bg-params" id="params">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="icon">&#9881;</span>
+    <h2 style="color:#bc8cff">Tham số - Input Parameters</h2>
+    <span class="toggle">&#9654;</span>
+  </div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Tham số</th><th>Mặc định</th><th>Mô tả</th></tr></thead>
+      <tbody>
+        <tr class="param-group"><td colspan="3">&#128200; GIAO DỊCH CHÍNH</td></tr>
+        <tr><td>MagicNumber</td><td>777</td><td>ID phân biệt EA với EA khác</td></tr>
+        <tr><td>FixedLot</td><td>0.01</td><td>Khối lượng lot mỗi lệnh</td></tr>
+        <tr><td>StepPip</td><td>150</td><td>Khoảng cách pip giữa các lệnh pending</td></tr>
+        <tr><td>MaxPerSide</td><td>200</td><td>Số lệnh tối đa mỗi hướng (BUY hoặc SELL)</td></tr>
+        <tr><td>MaxSpreadPip</td><td>50</td><td>Spread tối đa cho phép giao dịch</td></tr>
+        <tr><td>EMA_Fast</td><td>10</td><td>EMA nhanh (lọc điều kiện vào lệnh)</td></tr>
+        <tr><td>EMA_Slow</td><td>50</td><td>EMA chậm (lọc điều kiện vào lệnh)</td></tr>
+
+        <tr class="param-group"><td colspan="3">&#128176; CHỐT LỜI (TAKE PROFIT)</td></tr>
+        <tr><td>ClusterTP_USD</td><td>$1.50</td><td>Full TP: đóng tất cả khi tổng lời >= $</td></tr>
+        <tr><td>PartialTP_USD</td><td>$0.50</td><td>Partial TP: đóng 3 lệnh khi lời >= $</td></tr>
+        <tr><td>SingleTP_USD</td><td>$0.05</td><td>Single TP: đóng 1 lệnh khi chỉ 1 hướng</td></tr>
+        <tr><td>EnableStepTP</td><td>Bật</td><td>Bật/tắt Step TP</td></tr>
+        <tr><td>StepTP_Multiplier</td><td>5.0</td><td>Step TP: đóng khi lời >= X * StepPip pip</td></tr>
+        <tr><td>EnableFibTP</td><td>Tắt</td><td>Bật/tắt Fib 50% TP</td></tr>
+        <tr><td>FibTP_USD</td><td>$0.05</td><td>Fib TP: đóng cặp xa nhất khi lời >= $</td></tr>
+
+        <tr class="param-group"><td colspan="3">&#127764; CUỐI TUẦN</td></tr>
+        <tr><td>EnableWeekendHedge</td><td>Bật</td><td>Bật/tắt hedge cuối tuần</td></tr>
+        <tr><td>HoursBeforeClose</td><td>2</td><td>Số giờ trước đóng sàn để hedge</td></tr>
+        <tr><td>ServerCloseDayOfWeek</td><td>5</td><td>Ngày đóng sàn (5 = Thứ 6)</td></tr>
+        <tr><td>ServerCloseHour</td><td>23</td><td>Giờ đóng sàn</td></tr>
+
+        <tr class="param-group"><td colspan="3">&#128721; AN TOÀN</td></tr>
+        <tr><td>MaxDrawdownPercent</td><td>50%</td><td>DD% để dừng vào lệnh mới</td></tr>
+        <tr><td>HedgeDrawdownPercent</td><td>70%</td><td>DD% để tự động hedge</td></tr>
+        <tr><td>DrawdownDisplayPercent</td><td>50%</td><td>DD% hiện cảnh báo đỏ trên dashboard</td></tr>
+        <tr><td>RebuildBufferPercent</td><td>30%</td><td>% buffer để rebuild pending</td></tr>
+        <tr><td>EnableEmergencyTP</td><td>Bật</td><td>Bật/tắt TP khẩn cấp</td></tr>
+        <tr><td>EmergencyThresholdPercent</td><td>90%</td><td>Ngưỡng % số lệnh kích hoạt emergency</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:30px;color:#8b949e;font-size:13px;border-top:1px solid #21262d;margin-top:40px">
+  GoneWithTheWind EA v9.0 | Logic Flow Documentation<br>
+  Tự động cập nhật khi code thay đổi
+</div>
+
+<script>
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+function openSection(id) {
+  const section = document.getElementById(id);
+  const body = section.querySelector('.section-body');
+  const toggle = section.querySelector('.toggle');
+  if (!body.classList.contains('open')) {
+    body.classList.add('open');
+    toggle.classList.add('open');
+  }
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
