@@ -88,12 +88,10 @@
   .tp1 .tp-card { border-color: #238636; }
   .tp2 .tp-num { background: #9e6a03; color: white; }
   .tp2 .tp-card { border-color: #9e6a03; }
-  .tp3 .tp-num { background: #0d8a9e; color: white; }
-  .tp3 .tp-card { border-color: #0d8a9e; }
-  .tp4 .tp-num { background: #cc4400; color: white; }
-  .tp4 .tp-card { border-color: #cc4400; }
-  .tp5 .tp-num { background: #8b5cf6; color: white; }
-  .tp5 .tp-card { border-color: #8b5cf6; }
+  .tp3 .tp-num { background: #cc4400; color: white; }
+  .tp3 .tp-card { border-color: #cc4400; }
+  .tp4 .tp-num { background: #8b5cf6; color: white; }
+  .tp4 .tp-card { border-color: #8b5cf6; }
 
   .tp-note { text-align: center; color: #8b949e; font-size: 13px; margin-top: 12px; padding: 8px; background: #21262d; border-radius: 8px; max-width: 600px; }
 
@@ -206,6 +204,16 @@
         </div>
       </div>
 
+      <!-- Bước 2.5: Auto Enforce -->
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
+        <div style="background:#f0b429;color:#0d1117;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">&#9889;</div>
+        <div>
+          <div style="font-weight:600;color:#f0b429">Auto EnforceStep</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">EMA trend + order count &#8594; tự động bật/tắt EnforceStepBuy/Sell. <strong>Sideways=OFF</strong> (TP nhiều), <strong>Trending=ON bên thua</strong> (tránh dồn lệnh)</div>
+          <div style="font-size:12px;color:#8b949e;margin-top:4px">Hysteresis: ON &#8805; 25% MaxPerSide, OFF &lt; 15% MaxPerSide</div>
+        </div>
+      </div>
+
       <!-- Bước 3 -->
       <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:#21262d;border-radius:10px;margin-bottom:2px">
         <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">3</div>
@@ -230,7 +238,7 @@
         <div style="background:#238636;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">5</div>
         <div>
           <div style="font-weight:600;color:#3fb950">Chốt lời (Take Profit) &#8592; LUÔN chạy</div>
-          <div style="font-size:13px;color:#8b949e;margin-top:2px">Kiểm tra 5 loại TP theo thứ tự ưu tiên. <strong>Bước này chạy ngay cả khi đang hedge</strong></div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">Kiểm tra 4 loại TP theo thứ tự ưu tiên. <strong>Bước này chạy ngay cả khi đang hedge</strong></div>
         </div>
       </div>
 
@@ -249,7 +257,7 @@
         <div style="background:#30363d;color:#8b949e;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px">7</div>
         <div>
           <div style="font-weight:600;color:#e6edf3">Kiểm tra an toàn</div>
-          <div style="font-size:13px;color:#8b949e;margin-top:2px">DD >= 50% &#8594; chặn lệnh mới. DD >= 70% &#8594; tự động hedge. Spread quá cao &#8594; chờ.</div>
+          <div style="font-size:13px;color:#8b949e;margin-top:2px">DD >= 50% &#8594; chặn lệnh mới. Spread quá cao &#8594; chờ.</div>
           <div style="font-size:12px;color:#f85149;margin-top:4px">&#128683; Nếu không an toàn &#8594; DỪNG</div>
         </div>
       </div>
@@ -342,7 +350,7 @@
 <div class="section bg-tp" id="tp">
   <div class="section-header" onclick="toggleSection(this)">
     <span class="icon">&#128176;</span>
-    <h2 style="color:#3fb950">Take Profit - 5 loại chốt lời</h2>
+    <h2 style="color:#3fb950">Take Profit - 4 loại chốt lời</h2>
     <span class="toggle">&#9654;</span>
   </div>
   <div class="section-body">
@@ -365,39 +373,14 @@
       <div class="tp-item tp2">
         <div class="tp-num">2</div>
         <div class="tp-card">
-          <h4 style="color:#d29922">&#128257; Partial TP</h4>
-          <p>Đóng <strong>3 lệnh</strong> (2 cùng hướng + 1 ngược hướng) khi tổng lời >= ngưỡng</p>
-          <div class="default">Mặc định: $0.50</div>
-        </div>
-      </div>
-      <div class="tp-connector"></div>
-
-      <div class="tp-item tp3">
-        <div class="tp-num">3</div>
-        <div class="tp-card">
-          <h4 style="color:#0d8a9e">&#9989; Single TP</h4>
-          <p>Đóng <strong>1 lệnh</strong> lời nhất khi chỉ còn <strong>1 hướng</strong> (chỉ BUY hoặc chỉ SELL)</p>
-          <div class="default">Mặc định: $0.05</div>
-        </div>
-      </div>
-      <div class="tp-connector"></div>
-
-      <div class="tp-item tp4">
-        <div class="tp-num">4</div>
-        <div class="tp-card">
-          <h4 style="color:#cc4400">&#128207; Step TP</h4>
-          <p>Đóng lệnh khi lời tính theo <strong>pip</strong> >= X lần StepPip (khoảng cách pending)</p>
-          <div class="default">Mặc định: 5 x 150 = 750 pip</div>
-        </div>
-      </div>
-      <div class="tp-connector"></div>
-
-      <div class="tp-item tp5">
-        <div class="tp-num">5</div>
-        <div class="tp-card">
-          <h4 style="color:#8b5cf6">&#128256; Fib 50% TP</h4>
-          <p>Tìm 2 lệnh <strong>cùng hướng</strong> có entry xa nhau nhất, đóng khi tổng lời >= ngưỡng</p>
-          <div class="default">Mặc định: $0.05 (TẮT)</div>
+          <h4 style="color:#d29922">&#128257; Partial TP (2 chế độ)</h4>
+          <p><strong>Mode CloseFar:</strong> Tìm lệnh lỗ xa giá nhất → gom tối đa N lệnh lời để bù:</p>
+          <ul style="margin:8px 0 8px 20px;color:#8b949e;font-size:14px">
+            <li><strong>Case 1:</strong> Đủ bù → đóng trọn lệnh lỗ + hết lệnh lời</li>
+            <li><strong>Case 2:</strong> Không đủ bù trọn → đóng phần lot lệnh lỗ (gặm dần)</li>
+          </ul>
+          <p><strong>Mode Combo:</strong> Tìm 3 lệnh (2 cùng hướng + 1 ngược hướng) có tổng lời >= ngưỡng → đóng cả 3</p>
+          <div class="default">Mặc định: CloseFar, N=200 lệnh, ngưỡng $0.30</div>
         </div>
       </div>
     </div>
@@ -432,23 +415,13 @@
         <div class="step"><div class="step-num">5</div><div class="step-text"><strong>Thứ 2:</strong> Nếu hedge đang lời &#8594; đóng ngay. Nếu hedge đang lỗ &#8594; chờ lệnh thường có lời đủ bù, rồi đóng cả hai. <em>Không bao giờ cắt lỗ.</em></div></div>
       </div>
 
-      <div class="hedge-card hedge-dd">
-        <h3 style="color:#f85149">&#128680; DD Hedge (Drawdown)</h3>
-        <p style="color:#8b949e;margin-bottom:12px">Bảo vệ khi lỗ quá nhiều</p>
-        <div class="step"><div class="step-num">1</div><div class="step-text"><strong>DD >= 70%</strong> balance &#8594; Tự động kích hoạt</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text">Cân bằng lot tương tự Weekend</div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text">Ngừng vào lệnh mới (chỉ chạy TP)</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text"><strong>User tự đóng tay</strong> trên MT5</div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-text">DD giảm < 50% &#8594; cho phép hedge lại nếu cần</div></div>
-      </div>
     </div>
 
     <div class="rule-box">
-      <h4>&#9888; Quy tắc chống trùng:</h4>
+      <h4>&#9888; Quy tắc:</h4>
       <ul>
-        <li>Chỉ có <strong>1 hedge</strong> tại một thời điểm (Weekend HOẶC DD, KHÔNG cả hai)</li>
-        <li>Mỗi đợt DD chỉ hedge <strong>1 lần</strong> - nếu user đóng tay, EA <strong>KHÔNG đặt lại</strong></li>
-        <li>Chỉ reset khi DD giảm xuống < 50%, sau đó DD lên lại 70% mới hedge tiếp</li>
+        <li>Chỉ có <strong>1 hedge</strong> tại một thời điểm (Weekend hedge)</li>
+        <li>Thứ 2 tự động đóng hedge nếu lời, chờ bù nếu lỗ</li>
       </ul>
     </div>
   </div>
@@ -486,7 +459,7 @@
       <div class="safety-layer layer-red">
         <div class="safety-label" style="color:#f85149">DD >= 70%</div>
         <div class="safety-desc">Nguy hiểm</div>
-        <div class="safety-action">&#128308; TỰ ĐỘNG HEDGE + Dừng vào lệnh mới</div>
+        <div class="safety-action">&#128308; Dừng vào lệnh mới</div>
       </div>
     </div>
 
@@ -536,12 +509,9 @@
 
         <tr class="param-group"><td colspan="3">&#128176; CHỐT LỜI (TAKE PROFIT)</td></tr>
         <tr><td>ClusterTP_USD</td><td>$1.50</td><td>Full TP: đóng tất cả khi tổng lời >= $</td></tr>
-        <tr><td>PartialTP_USD</td><td>$0.50</td><td>Partial TP: đóng 3 lệnh khi lời >= $</td></tr>
-        <tr><td>SingleTP_USD</td><td>$0.05</td><td>Single TP: đóng 1 lệnh khi chỉ 1 hướng</td></tr>
-        <tr><td>EnableStepTP</td><td>Bật</td><td>Bật/tắt Step TP</td></tr>
-        <tr><td>StepTP_Multiplier</td><td>5.0</td><td>Step TP: đóng khi lời >= X * StepPip pip</td></tr>
-        <tr><td>EnableFibTP</td><td>Tắt</td><td>Bật/tắt Fib 50% TP</td></tr>
-        <tr><td>FibTP_USD</td><td>$0.05</td><td>Fib TP: đóng cặp xa nhất khi lời >= $</td></tr>
+        <tr><td>PartialTP_Mode</td><td>CloseFar</td><td>Chế độ Partial TP: CloseFar (bù lỗ xa) / Combo (2+1)</td></tr>
+        <tr><td>PartialTP_USD</td><td>$0.30</td><td>Partial TP: ngưỡng lời tối thiểu ($)</td></tr>
+        <tr><td>PartialTP_SameDir</td><td>200</td><td>Partial TP [CloseFar]: số lệnh lời tối đa gom (N)</td></tr>
 
         <tr class="param-group"><td colspan="3">&#127764; CUỐI TUẦN</td></tr>
         <tr><td>EnableWeekendHedge</td><td>Bật</td><td>Bật/tắt hedge cuối tuần</td></tr>
@@ -551,9 +521,10 @@
 
         <tr class="param-group"><td colspan="3">&#128721; AN TOÀN</td></tr>
         <tr><td>MaxDrawdownPercent</td><td>50%</td><td>DD% để dừng vào lệnh mới</td></tr>
-        <tr><td>HedgeDrawdownPercent</td><td>70%</td><td>DD% để tự động hedge</td></tr>
         <tr><td>DrawdownDisplayPercent</td><td>50%</td><td>DD% hiện cảnh báo đỏ trên dashboard</td></tr>
         <tr><td>RebuildBufferPercent</td><td>30%</td><td>% buffer để rebuild pending</td></tr>
+        <tr><td>EnforceStepBuy</td><td>Bật</td><td>Bắt buộc BUY cách nhau >= StepPip (tắt = cho đặt sát)</td></tr>
+        <tr><td>EnforceStepSell</td><td>Bật</td><td>Bắt buộc SELL cách nhau >= StepPip (tắt = cho đặt sát)</td></tr>
         <tr><td>EnableEmergencyTP</td><td>Bật</td><td>Bật/tắt TP khẩn cấp</td></tr>
         <tr><td>EmergencyThresholdPercent</td><td>90%</td><td>Ngưỡng % số lệnh kích hoạt emergency</td></tr>
       </tbody>
