@@ -213,11 +213,37 @@ Lot = (Số tiền chấp nhận mất) / (Khoảng cách SL tính bằng pip ×
 | **New York** | 19:00 – 04:00 | Biến động mạnh nhất |
 | **London + NY chồng** | 19:00 – 23:00 | ⭐ Thời điểm tốt nhất |
 
+### Khung giờ peak thực tế (từ 5 năm dữ liệu)
+
+| Giờ VN | Avg H1 range | Ghi chú |
+|--------|--------------|---------|
+| **20h–21h** | **13.5–13.7 USD** | 🔥 Đỉnh ngày — NY peak + tin Mỹ |
+| 19h, 22h | 10–13 USD | London-NY overlap |
+| **8h** | **9.0 USD** | 🟡 Peak phụ — Tokyo |
+| 7h, 14h | 8.2 USD | Tokyo open / London open |
+| 10h–11h | 5.3–5.6 USD | Tokyo trưa (yên) |
+| **4h** | **1.2 USD** | ⚠️ Broker rollover gap, không phải "yên thật" |
+
+→ Chi tiết về múi giờ broker + số liệu 5 năm: **[BROKER_TIMEZONE_AND_HOURS.md](BROKER_TIMEZONE_AND_HOURS.md)** và **[VOLATILITY_REPORT_5Y.md](VOLATILITY_REPORT_5Y.md)**.
+
 ### Thời điểm nên tránh trade
 - **Đầu tuần** (thứ 2 sáng sớm) — gap, spread rộng
 - **Cuối tuần** (thứ 6 tối) — biến động bất thường
 - **Trước/trong tin NFP, FOMC, CPI** — biến động cực mạnh, dễ bị quét SL
+- **Broker rollover (~4h sáng VN)** — không có nến H1, spread giãn 5–10× bình thường
 - **Ngày lễ lớn** (Giáng sinh, Năm mới) — thanh khoản thấp
+
+### Lịch tin Mỹ → giờ VN (giai đoạn DST, tháng 3 → tháng 11)
+
+| Tin | Giờ ET | **Giờ VN** | Thứ |
+|-----|--------|------------|-----|
+| NFP | 8:30 AM | **19:30** | Fri 1st |
+| CPI / Retail Sales / Claims | 8:30 AM | **19:30** | thay đổi |
+| ISM / JOLTS | 10:00 AM | **21:00** | thay đổi |
+| FOMC statement | 2:00 PM | **01:00 (next day VN)** | Wed |
+| FOMC press conf | 2:30 PM | **01:30 (next day VN)** | Wed |
+
+Mùa đông (winter, tháng 11 → tháng 3): cộng thêm 1 giờ vào cột giờ VN.
 
 ---
 
