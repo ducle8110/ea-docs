@@ -1,8 +1,8 @@
 ================================================================================
-TÀI LIỆU BÀN GIAO — EA v98_TylerFVG (v1.24)
+TÀI LIỆU BÀN GIAO — EA v98_TylerFVG (v2.04)
 Chiến lược: Tyler Goedtel (TG Capital) — London Session FVG + EMA Stack, khung M30
-Cập nhật: 15/11/2026 — bản hiệu đính trên nền bản v1.20 (Gemini) sau khi đối chiếu
-          lại code, CSV lệnh và báo cáo backtest.
+Cập nhật: 16/11/2026 — bản hiệu đính trên nền bản v1.20 (Gemini) sau khi đối chiếu
+          lại code, CSV lệnh và báo cáo backtest. v2.02 rút gọn input còn 12, bỏ giới hạn lệnh/ngày; v2.03 CSV lệnh thêm 6 cột FVG/nến từ chối; v2.04 dashboard mới + 5 EMA trên chart (mục 6, 7).
 Thư mục gốc: C:\Users\duc\Documents\project\tool
 ================================================================================
 
@@ -199,17 +199,26 @@ f) Những gì CÓ cơ sở từ dữ liệu (bền qua nhiều cấu hình, kh�
 
 6. PRESET
 --------------------------------------------------------------------------------
-[MẶC ĐỊNH CỦA v1.24 khi kéo EA lên chart XAUUSD M30 — chốt với người dùng 15/11]
-  Như cấu hình đề xuất bên dưới, chỉ khác:
-  LotMode LOT_FIXED | FixedLot 1.00  (mã .sc 1 oz/lot: muốn 1 lot chuẩn phải đặt 100.0)
-  EnableBreakEven false | TrailMode TRAIL_NONE  → SL gốc giữ nguyên, chỉ thoát MA Stack.
+[MẶC ĐỊNH CỦA v2.02 khi kéo EA lên chart XAUUSD M30 — chốt với người dùng 16/11]
+  v2.02 chỉ còn 12 input:
+    MagicNumber 798 | FixedLot 1.00 (mã .sc 1 oz/lot: 1 lot chuẩn = 100.0)
+    EnableBuy true | EnableSell true | MaxSpreadPip 50 ($0.50) | SignalTF M30
+    MinFVG_Pip 20 | MinRejectWickRatio 0.40 | SL_SwingBars 5 | SL_BufferATR 0.20
+    SkipBigBar_ATR 0 (đặt 2.5 nếu muốn né lệnh ngay sau tin) | ShowVisual true
+  Cố định trong code (không còn input): chạy 24/24; 1 lệnh mở tại một thời điểm, không giới hạn lệnh/ngày;
+  FVG sống 24 nến; EMA 5/9/13/21/200; ATR 14; SL tối thiểu 3 pip; 6 nến quét nến tin;
+  SL = chân sóng (nến từ chối + 5 nến) − 0.2 ATR; không TP, không BE, không trailing;
+  thoát khi EMA 5-9-13-21 mất xếp chồng; CSV log luôn ghi Common\Files\v98_tyler_deals_*.csv.
+  Hồi quy v2.02 (M1 OHLC, $100k, 1 lot chuẩn) trùng từng số với v1.24:
+    2024 +$5,919 / +12.69R / 128 lệnh | 2025 +$27,732 / +65.13R / 136 | 2026→01/11 +$128,584 / +29.83R / 103
   Real Ticks, $100k, 1 lot chuẩn, từng năm (vốn reset mỗi năm):
     2024 +$5,667 (win 21.1%, DD $8,251) | 2025 +$27,619 (34.6%, DD $28,787)
     2026 tới 01/11 +$127,198 (31.4%, DD $14,677; gồm 1 lệnh treo cuối kỳ +$13,283)
   So sánh đã thử và bỏ: BE 1.5R (+$7,651 | +$20,259 | +$125,871), trailing 2 ATR
   (+$11,032 | +$6,823 | +$76,190). Chi tiết docs/V98_OPTIMIZATION_2026.md mục 9.
 
-[CẤU HÌNH ĐỀ XUẤT THEO BACKTEST — mặc định của v1.22]
+[CẤU HÌNH ĐỀ XUẤT THEO BACKTEST — mặc định của v1.22; các input LotMode/BE/SL_Mode…
+ bên dưới KHÔNG còn trong v2.02, giữ lại để tra cứu lịch sử]
   Cơ sở: dương cả 3 năm 2024/2025/2026, cả Buy và Sell, M1 lẫn Real Ticks
   (2024.01→2026.11 Real Ticks: 371 lệnh, +94.5R, PF 1.58, DD 14.7% với 1% risk).
   MagicNumber 798 | SignalTF M30 | LotMode LOT_RISK_PCT, RiskPercent 0.5–1.0
@@ -240,8 +249,83 @@ f) Những gì CÓ cơ sở từ dữ liệu (bền qua nhiều cấu hình, kh�
   Nếu vẫn muốn thử: MinFVG_Pip 1–2, SL_BufferPip 1–2, EnableSell true.
 
 
-7. THAY ĐỔI v1.21 … v1.24 (so với v1.20 của Gemini) — logic tín hiệu KHÔNG đổi
+7. THAY ĐỔI v1.21 … v2.04 (so với v1.20 của Gemini) — logic tín hiệu KHÔNG đổi
 --------------------------------------------------------------------------------
+v2.04 (17/11/2026): CHỈ đổi hiển thị, logic/kết quả trùng v2.02–v2.03 (2026: 103 lệnh, +$128,583.90).
+  - Dòng "Trạng thái" trên dashboard trước đây là chuỗi mặc định "Đang chờ phiên London..." sót từ bản
+    còn lọc phiên, chỉ bị ghi đè khi có sự kiện. Nay mỗi nến đóng EA tự ghi: "Nến HH:MM: EMA chưa xếp
+    chồng -> chưa tìm FVG / điểm vào" / "EMA xếp chồng TĂNG, N FVG chờ nến từ chối (râu >= 40%)" /
+    "đang giữ lệnh, chờ EMA mất xếp chồng để thoát"... Thông báo vào/thoát/bỏ qua vẫn ghi đè như cũ.
+  - Vẽ 5 đường EMA 5/9/13/21/200 lên chart với 5 màu tương phản (5 vàng, 9 hồng cánh sen, 13 xanh lơ,
+    21 cam, 200 trắng dày), cùng màu với hàng giá trị EMA trên dashboard ("EMA5 4982.83"...). Đầu mỗi
+    đường có nhãn "EMA 5/9/13/21/200" bám theo giá, đặt cách nến hiện tại 2 nến về bên phải; EA tự bật
+    Chart Shift (khoảng trống bên phải) để nhãn có chỗ — nếu người dùng tắt shift thì nhãn nằm ngoài màn hình. Cơ chế: chỉ báo một đường v98_EMA.mq5 (repo root) được NHÚNG vào v98_TylerFVG.ex5
+    bằng #resource; khi chạy thật chỉ cần kéo EA lên chart, KHÔNG cần cài v98_EMA. Khi BIÊN DỊCH EA phải có
+    MQL5\Indicators\v98_EMA.ex5 (compile v98_EMA.mq5 trước). Input mới ShowEMA (true) — tắt nếu bạn đã tự
+    thêm EMA; tổng 13 input. EMA vẽ theo khung CỦA CHART (ChartIndicatorAdd đòi hỏi vậy) nên mở EA trên
+    chart M30 để trùng tín hiệu; nếu khác khung EA ghi cảnh báo vào Nhật ký. Gỡ EA = gỡ luôn 5 đường.
+    Lưu ý: trong Strategy Tester visual, tester tự vẽ thêm các handle iMA của EA bằng màu đỏ mặc định đè
+    lên — trên chart thật không có.
+  - Dòng "Cấu trúc EMA" khi rối ghi rõ thứ tự thực tế (vd "RỐI | thứ tự 21>200>13>9>5 | giá dưới 200") và
+    dòng phụ "Gần GIẢM hơn, còn thiếu 1/5: 21<200"; khi đã xếp chồng ghi giá cách EMA21/EMA200 bao nhiêu pip.
+  - Hai dòng "Sớm nhất có lệnh nếu giá đi một chiều X$/nến (0.5 ATR)": mô phỏng đúng công thức EMA từ 5 giá
+    trị hiện tại, giả định giá đi một chiều 0.5 ATR(14) mỗi nến, đếm số nến tới khi đủ 5 điều kiện xếp chồng
+    (EstimateStackBars), cộng 3 nến (FVG + nến từ chối + nến xác nhận) rồi đổi ra giờ, kèm giá tại lúc đó:
+    "SELL ~3.0h (về ~3858) | BUY ~9.5h (lên ~3975)". Quá 96 nến ghi ">2 ngày"; phía đã xếp chồng ghi "chờ
+    FVG (>=1.5h)". Mục đích: người dùng biết có cần treo máy không. Nhãn trên bảng là "Không sớm hơn".
+    KIỂM CHỨNG trên 9.700 nến 2026 (scratch, so với open_time trong v204_y26.csv): lệnh thật đến muộn hơn
+    con số này ở 98% số nến (2% còn lại chủ yếu là lúc đã xếp chồng và setup đang dở, nay đã tính theo
+    g_hasPendingRej/fvgCnt: còn 1/2/3 nến); trung vị lệnh thật muộn gấp 18-19 lần; khi ước >=12h thì thực tế
+    nhỏ nhất 23.5h. => Dùng như CẬN DƯỚI để quyết định tắt máy, KHÔNG dùng như dự báo giờ vào lệnh.
+  - Dashboard bố cục gọn 500x240px, 9 hàng, mỗi hàng một ý, ngăn cách bằng "·"; phần giải thích chuyển
+    thành TOOLTIP (rê chuột lên từng dòng): tiêu đề + giờ srv + spread · EMA TĂNG/GIẢM/RỐI kèm thứ tự ·
+    chi tiết (cách EMA21/200 hoặc còn thiếu cặp nào) · 5 giá trị EMA đúng màu · Sớm nhất có lệnh · FVG/chờ
+    xác nhận/lệnh mở · thống kê · trạng thái (tối đa 2 dòng, OBJ_LABEL giới hạn 63 ký tự/nhãn) · 2 nút.
+    Nút [-]/[+] góc phải trên thu gọn còn 1 dòng tóm tắt / mở lại. Nút này (và hai
+    nút cũ) chỉ hoạt động trên chart thật vì Strategy Tester không phát sự kiện OnChartEvent.
+
+v2.03 (16/11/2026 tối): CHỈ đổi log. CSV lệnh (Common\Files\v98_tyler_deals_*.csv) thêm 6 cột
+  fvg_time, fvg_bot, fvg_top, rej_time, rej_high, rej_low (vùng FVG đã dùng và nến từ chối giá;
+  fvg_time = giờ mở nến thứ 3 của bộ ba tạo FVG; nến xác nhận = nến ngay sau rej_time; lệnh khôi
+  phục sau khởi động lại ghi 0/rỗng). Mục đích: vẽ lại FVG trên chart từng lệnh ở trang tóm tắt
+  public cho chuyên gia (https://claude.ai/artifact/TsxgfMwWy6Z1DZmitxiSpj). Hồi quy 2026 trùng
+  từng số với v2.02 (103 lệnh, +$128,583.90, DD $14,294.53). Input và logic không đổi.
+  Lưu ý: file CSV live đang ghi dở bằng header cũ (11 cột) sẽ có dòng mới dài hơn header — nếu
+  cần sạch, xoá/đổi tên CSV live trước khi nạp v2.03 (EA chỉ ghi header khi tạo file mới).
+
+v2.02 (16/11/2026): bỏ hẳn giới hạn lệnh/ngày (v2.01 còn để hằng 3). EA vốn chỉ giữ 1 lệnh mở
+  nên giới hạn này vô nghĩa; 2024–2026 chỉ 1 ngày từng chạm 3 lệnh và hồi quy 3 năm vẫn trùng
+  từng số. Dashboard bỏ ô "Lệnh hôm nay". Compile 0 lỗi / 0 cảnh báo.
+
+v2.01 (16/11/2026, ngay sau v2.00): 20 → 12 input theo yêu cầu "20 vẫn còn nhiều":
+- Bỏ MaxTradesPerDay (hằng 3, v2.02 bỏ hẳn), EnableTimeFilter/EntryStartHour/EntryEndHour (đã chốt
+  24/24), MaxFVG_AgeBars (hằng 24), RequireConfirmColor (chưa từng dùng), 3 dòng tiêu đề nhóm.
+- DrawChartObjects + ShowDashboard gộp thành ShowVisual; EnableCSVLog bỏ, log luôn bật.
+- Giữ lại theo yêu cầu: SignalTF, MaxSpreadPip. run_v98.ps1: -MaxSpreadPip -SignalTF (30=M30).
+- Hồi quy 3 năm trùng từng số với v2.00/v1.24. Compile 0 lỗi / 0 cảnh báo.
+
+v2.00 (16/11/2026): RÚT GỌN INPUT 60 → 20 theo yêu cầu "quá nhiều input". Bỏ hẳn code:
+- LotMode/RiskPercent (chỉ còn FixedLot, vẫn kẹp theo 90% Free Margin).
+- SL_Mode + FixedSL_Pip/SL_BufferPip/SL_DistMult/MinSL_FloorATR/MaxSL_Pip/MaxSL_ATR
+  (chỉ còn chân sóng SL_SwingBars + SL_BufferATR); MinSL_Pip → hằng 3 pip.
+- ExitMode/FixedTP_RR/MinProfitExit_RR (chỉ còn MA_STACK_BREAK, không TP).
+- EnableBreakEven/BE_*, TrailMode/Trail_*, HardCloseServerHour (bỏ cả hàm
+  ManageOpenPositionOnTick — EA không còn sửa SL sau khi vào lệnh).
+- MinMove24h_ATR, RequireSlowEMASlope (sweep S9–S11 không bền); SkipBigBar_Bars → hằng 6.
+- EMA_Fast1/Fast2/Mid1/Mid2/Trend → hằng 5/9/13/21/200; ATR_Period → hằng 14.
+- Khung giờ: FVG_StartHour/Min, EntryStartMin, EntryEndMin bỏ; còn EntryStartHour/
+  EntryEndHour (giờ nguyên, End không gồm), dùng chung cho quét FVG và vào lệnh.
+- CSV cột reason chỉ còn MA_STACK_BREAK / SL / TP / MANUAL_BTN / OTHER.
+- run_v98.ps1 + sweep_v98.ps1 đổi theo (default = default EA, $100k, FixedLot 100);
+  plan S1–S11 cũ không chạy lại được. Hồi quy 3 năm trùng từng số với v1.24 (mục 6).
+  Compile 0 lỗi / 0 cảnh báo. Khi nạp .set cũ của v1.x, tester bỏ qua input không còn.
+
+v1.25 (16/11/2026 sáng): thêm 3 input lọc, MẶC ĐỊNH TẮT (0) nên kết quả y hệt v1.24:
+- MaxSL_ATR (bỏ kèo nếu SL > X ATR), MinMove24h_ATR (giá phải chạy thuận ≥ X ATR
+  trong 48 nến), SkipBigBar_ATR + SkipBigBar_Bars (không vào ngay sau nến biên độ > X ATR).
+- Đã sweep 59 lượt 2024–2026: không bộ lọc nào bền hơn mặc định ở cả 3 năm → để tắt.
+  Chi tiết docs/V98_OPTIMIZATION_2026.md mục 10. run_v98.ps1 có -MaxSLATR -MinMove24hATR
+  -SkipBigBarATR -SkipBigBarBars -SlowSlope. Compile 0 lỗi / 0 cảnh báo.
 v1.24 (15/11/2026 tối, sau v1.23):
 - Tắt EnableBreakEven và TrailMode (TRAIL_NONE) theo quyết định người dùng: winrate
   không đổi (21/35/31% ba năm) dù có BE, tổng $ không BE cao hơn. Không đổi code.
@@ -277,21 +361,22 @@ v1.21:
 8. VẬN HÀNH
 --------------------------------------------------------------------------------
 (1) Biên dịch:          .\compile_v98.ps1
-(2) Backtest Cấu hình A (Real Ticks; đóng terminal test trước, script sẽ kill nó):
-      .\backtest\run_v98.ps1 -Symbol XAUUSD.sc -From 2024.01.01 -To 2026.11.01 `
-        -Model 4 -Deposit 100000 -LotMode 1 -FixedLot 100.0 -TimeFilter true `
-        -EnableSell false -MinFVGPip 20 -SLBufPip 30 -SLDistMult 2.0 `
-        -MaxSLPip 1200 -ExitMode 0 -Tag <ten_lan_chay>
-    Lưu ý default của script: MaxSLPip 8000, SLBufPip 2, MinFVGPip 2 (bộ Forex) —
-    luôn truyền tường minh như trên khi test Vàng.
+(2) Backtest (đóng terminal test trước, script sẽ kill nó). Default của script v2.02 =
+    default EA: XAUUSD.sc, $100k, FixedLot 100 (1 lot chuẩn), 24/24, Buy+Sell, M1 OHLC:
+      .\backtest\run_v98.ps1 -From 2026.01.01 -To 2026.11.01 -Tag y26
+      .\backtest\run_v98.ps1 -From 2025.01.01 -To 2026.01.01 -Model 4 -SkipBigBarATR 2.5 -Tag y25_rt_bb
+    Tham số: -FixedLot -EnableBuy -EnableSell -MaxSpreadPip -SignalTF(30=M30) -MinFVGPip
+    -WickRatio -SLSwingBars -SLBufATR -SkipBigBarATR (11 input giao dịch của EA; ShowVisual
+    script luôn tắt) + -Model -Deposit -Window -TimeoutSec.
 (3) Trình xem chart lệnh:   python backtest\v98_trade_viewer.py  → backtest\v98_out\v98_trades.html
 (4) Đưa lên terminal live ("MetaTrader 5 - Duc EC"): copy v98_TylerFVG.ex5 vào
     <Data Folder>\MQL5\Experts, Refresh Navigator, kéo lên chart XAUUSD M30, tích
-    "Allow Algo Trading". Mặc định v1.24 = lot cố định 1.00, không BE, không trailing; trên mã .sc đặt FixedLot
-    100 cho 1 lot chuẩn, hoặc đổi LotMode LOT_RISK_PCT nếu muốn lot tự co theo SL.
-(4b) Sweep lại khi có dữ liệu mới (mỗi quý):
-      .\backtest\sweep_v98.ps1 -Plan .\backtest\v98_out\plan_s6.json -Force
-      python backtest\v98_sweep_summary.py "s6_"
+    "Allow Algo Trading". Mặc định v2.02 = lot cố định 1.00, không BE, không trailing; trên mã .sc đặt FixedLot
+    100 cho 1 lot chuẩn (v2.x không còn chế độ lot theo Risk%).
+(4b) Sweep lại khi có dữ liệu mới (mỗi quý) — viết plan mới với tên tham số v2.00
+     (plan_s1…s11 dùng tên cũ, không chạy lại được; tham chiếu: v202_y24/y25/y26):
+      .\backtest\sweep_v98.ps1 -Plan .\backtest\v98_out\plan_<ten>.json -Force
+      python backtest\v98_sweep_summary.py "<prefix>_"
     Mỗi lượt 12 tháng M1 ~13 giây; terminal chạy thu nhỏ (-Window Hidden để ẩn hẳn).
     Tài khoản phải là Hedging. Magic 798 không trùng v91 (777).
 (5) Log CSV: Common\Files\v98_tyler_deals_<Symbol>_798.csv (tester có hậu tố _test).
@@ -303,8 +388,9 @@ v1.21:
    từng lệnh với CSV để bắt lệch live/test.
 2. Kéo dữ liệu 2021–2023 nếu sàn có để có đoạn ngoài mẫu thật sự (toàn bộ 2024–2026
    đã được dùng để chọn cấu hình).
-3. Thử trần SL theo ATR (vd bỏ kèo nếu SL > 3×ATR14) và lọc tin mạnh; cần sweep lại.
-4. Cân nhắc thêm input "nến rút râu phải đóng trên đáy FVG" và FVG_StartHour 10:30 để
-   sát mô tả gốc hơn; so sánh kết quả thay vì mặc định tin bản hiện tại.
-5. Commit toàn bộ file v98 (hiện untracked) theo convention: feat(v98 v1.21): ...
+3. (Đã thử ở S9–S11, không bền → bỏ.) Trần SL theo ATR, động lượng 24h, lọc nến tin
+   chỉ còn SkipBigBar_ATR làm tuỳ chọn tắt.
+4. Cân nhắc thêm luật "nến rút râu phải đóng trên đáy FVG" để sát mô tả gốc hơn;
+   so sánh kết quả thay vì mặc định tin bản hiện tại.
+5. Commit v2.04 khi người dùng yêu cầu: feat(v98 v2.04): rút gọn input 60→13, CSV cột FVG, dashboard mới + 5 EMA trên chart...
 ================================================================================

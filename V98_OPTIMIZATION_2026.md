@@ -134,7 +134,7 @@ Luật 4 bước **không chuyển sang Forex** trong 12 tháng qua. London-only
 
 ---
 
-## 6. Cấu hình đề xuất (mặc định v1.22; **v1.23** đổi `LotMode = LOT_FIXED` + trailing 2 ATR theo yêu cầu; **v1.24 tắt luôn BE và trailing** sau khi xem mục 9.4 — thoát MA Stack đơn thuần)
+## 6. Cấu hình đề xuất (mặc định v1.22; **v2.02 rút gọn input còn 12, xem mục 11**; **v1.23** đổi `LotMode = LOT_FIXED` + trailing 2 ATR theo yêu cầu; **v1.24 tắt luôn BE và trailing** sau khi xem mục 9.4 — thoát MA Stack đơn thuần)
 
 ```
 LotMode = LOT_RISK_PCT, RiskPercent = 0.5–1.0     (KHÔNG dùng LOT_FIXED với SL rộng)
@@ -239,3 +239,98 @@ File: `backtest/v98_out/s8_*.csv` (M1), `s8rt_*.csv` (Real Ticks), plan `plan_s8
 - Chiến lược này thắng nhờ **TB lệnh thắng gấp 4–5 lần TB lệnh lỗ** (không nhờ winrate), nên mọi cơ chế đụng vào lệnh đang chạy (BE, trailing) đều chỉ có thể làm giảm vế này. **Kết luận: bỏ BE và trailing, giữ nguyên SL gốc + thoát MA Stack.** v1.24 đặt `EnableBreakEven = false`, `TrailMode = TRAIL_NONE`.
 - Winrate 21% năm 2024 là thật: năm đó ~38% lệnh ăn trọn SL. Ai cần winrate cao hơn để chịu được về tâm lý thì bật lại BE (tỉ lệ hoà tăng, winrate không tăng).
 
+---
+
+## 10. S9–S11 — "Có hướng nào ăn theo xu hướng / theo tin không?" (16/11/2026)
+
+Câu hỏi: trong 2025–2026, lợi nhuận đến từ loại lệnh nào, có lọc được để chỉ bắt lệnh "giá chạy mạnh theo xu hướng" không
+(bỏ qua nhảy giá ngay sau tin vì đã có bot tin riêng). Dữ liệu: 238 lệnh 2025–2026 của cấu hình v1.24 (không BE, không trailing,
+$100k, 1 lot chuẩn) ghép với nến M30 XAUUSD.sc để tính ATR, EMA200, dịch chuyển 24h, nến lớn nhất 3h trước. File: scratchpad `trades_feat.csv`, `xau_m30.csv`.
+
+### 10.1 Lợi nhuận nằm ở đâu (2025–2026, 238 lệnh, +95R, +$143k lệnh đã đóng)
+
+| Lát cắt | Nhóm | n | R | $ | PF$ |
+|---|---|---|---|---|---|
+| **Thời gian giữ lệnh** | < 4h | 124 | **−98.2** | −$109k | — |
+| | 4–12h | 70 | +31.6 | +$15.9k | — |
+| | 12–24h | 27 | **+92.0** | +$119k | win 100% |
+| | > 1 ngày | 16 | +70.5 | +$120k | win 94% |
+| Dịch chuyển 24h trước, thuận chiều | > 4 ATR | 115 | +63.3 | +$95k | 2.36 |
+| | 0–2 ATR | 52 | +17.6 | +$40k | 2.28 |
+| | ngược chiều | 23 | +7.8 | −$4k | 0.6 |
+| Nến lớn nhất 6 nến trước (proxy nến tin) | < 1.5 ATR (không nến tin) | 97 | **+74.5** | +$97k | 3.16 |
+| | 1.5–2.5 ATR | 115 | +16.7 | +$12k | 1.15 |
+| | > 2.5 ATR (ngay sau tin) | 26 | +3.8 | +$34k (toàn 2026) | — |
+| Ngày FOMC / NFP (±1 ngày) | có | 24 | +29.5 | +$51k | 5.17 |
+| | không | 214 | +65.5 | +$92k | 1.70 |
+| ATR so với trung vị 60 ngày | > 1.6× (biến động rất cao) | 35 | +27.2 | **+$97k** | 4.46 |
+| | 0.8–1.6× | 156 | +28.5 | +$24k | 1.2 |
+| Thứ trong tuần | Thứ Năm | 52 | **+47.3** | +$32k | 2.14 |
+| | Thứ Tư | 49 | −4.2 | +$19k | 1.54 |
+| Khoảng SL | < 1 ATR | 88 | +25.4 | +$2.7k | 1.07 |
+| | 1–2.5 ATR | 132 | +70.9 | +$143k | 2.7 |
+| | > 2.5 ATR | 18 | −1.3 | −$2.9k | 0.83 |
+| 20 lệnh lớn nhất | | 20 | **138% tổng R** | giữ TB 29h (toàn bộ 8h) | 14/20 thuận 24h >2 ATR, 3/20 ngày tin |
+
+Theo tháng: tương quan giữa |% thay đổi giá tháng| và R tháng = 0.03, tức **EA không lời hơn ở tháng xu hướng mạnh**;
+tháng 01/2026 (vàng +13%, biên độ 30%, đỉnh rồi sập) một mình đóng góp **+$75.7k = 53% tiền lãi 2 năm** (Buy 29/01 +$22.9k, Sell 30/01→02/02 +$35.6k).
+48 ngày biên độ > 2× trung vị: EA có lệnh ở 27 ngày, các lệnh đó +$91.7k (64% tiền lãi) nhưng chỉ 29R (30% R).
+Nói cách khác: **R đến từ lệnh thuận xu hướng giữ qua đêm; tiền $ (lot cố định) phình lên ở các pha biến động cực lớn vì SL rộng → lệnh to.**
+
+### 10.2 Thử lọc để "chỉ bắt lệnh xu hướng" — 59 lượt, không bộ lọc nào bền cả 3 năm
+
+| Bộ lọc (thêm vào v1.24) | 2024 | 2025 | 2026 | Nhận xét |
+|---|---|---|---|---|
+| **Không lọc (mốc)** | +12.7R / +$5.9k | +65.1R / +$27.7k | +29.8R / +$128.6k | |
+| FVG ≥ $0.5 / $1 / $2 / $4 | — | 53 / 33 / 25 / 22R | 30 / 35 / 38 / 16R | FVG to hơn = ít lệnh hơn, không khá hơn |
+| Chỉ phiên Mỹ 14:00–23:30 | — | **+0.4R** / +$6k | +23.1R / +$89k | 2025 lãi nằm ở Á + London → lọc phiên không bền |
+| EMA21 & EMA200 phải dốc thuận | — | +66.8R | +30.4R | gần như không đổi (bớt 3 lệnh) |
+| SL sàn 1 ATR | — | +46.9R | +34.7R | 2025 kém |
+| Trần SL 2.5 ATR (`MaxSL_ATR`) | +3.6R / −$1.4k | +64.3R / +$30.7k | +28.5R / +$125.9k | 2024 âm $ |
+| Động lượng 24h ≥ 2 ATR (`MinMove24h_ATR`) | **−16.5R** | +57.4R (DD 14.7%) | +20.7R | 2024 mất lệnh +33R (vào trước khi có động lượng) |
+| Động lượng 24h ≥ 4 ATR | **−16.1R** | +39.4R | +20.1R | tệ hơn |
+| Bỏ lệnh sau nến > 1.5 ATR trong 6 nến (`SkipBigBar_ATR`) | +11.0R / **−$4.8k** | +53.8R / +$20.7k | +19.3R / +$62.5k | mất nửa tiền 2026; R 2024 không cải thiện |
+| Bỏ lệnh sau nến > 2.0 ATR / 2.5 ATR | +1.7 / +9.8R | +53.1 / +65.3R | +24.8 / +24.4R | kém hoặc bằng mốc |
+
+Vì sao lát cắt 10.1 đẹp mà lọc lại không ăn: (1) **chọn mẫu nhìn lại** — các lệnh lớn nhất 2024 (+33R) và 2025 (+16.8R) vào khi
+chưa có động lượng 24h, sau đó xu hướng mới nổ; lọc động lượng cắt đúng chúng. (2) EA chỉ giữ 1 lệnh: bỏ một lệnh thì lệnh khác
+chui vào thay, kết quả lệch khỏi thống kê tĩnh. (3) Tiền $ 2026 nằm ở lệnh có ATR và SL rất lớn, chính là lệnh sau nến tin; muốn
+bỏ nhóm đó (vì đã có bot tin) thì chấp nhận 2026 còn ~$60–100k thay vì $128k.
+
+### 10.3 Trả lời
+
+- **Setup này bản thân đã là "ăn theo xu hướng"**: 100% lệnh giữ được 12h+ đều lãi, 20 lệnh lớn nhất = 138% tổng R; lệnh dưới 4h gần như toàn lỗ (đó là chi phí để bắt được lệnh lớn). Không cần và không lọc trước được lệnh nào sẽ thành lệnh lớn.
+- **Không phải setup theo tin**: lệnh vào ngay sau nến tin (>2.5 ATR) chỉ 26/238, R gần 0; lệnh ngày FOMC/NFP có PF cao nhưng 19/24 vào khi không có nến to, tức vào theo xu hướng ngày đó chứ không phải đón tin. Bot tin riêng và EA này gần như không trùng lệnh.
+- **Không có bộ lọc nào** (phiên, FVG, động lượng, nến tin, trần SL, độ dốc EMA) tốt hơn mốc ở cả 3 năm. v1.25 từng thêm 3 input lọc mặc định tắt; **v2.00 (16/11) bỏ `MaxSL_ATR` và `MinMove24h_ATR`, chỉ giữ `SkipBigBar_ATR`** (mặc định 0) vì đó là bộ lọc duy nhất có lý do vận hành: né lệnh trùng với bot tin.
+- Rủi ro cần nhớ khi chạy lot cố định: 53% tiền 2 năm nằm trong 1 tháng (01/2026); 2024 là năm "bình thường" chỉ +$5.9k với DD $8.3k. Kỳ vọng hợp lý cho 1 lot chuẩn là **+$5k … +$30k/năm**, năm bùng nổ là thưởng thêm.
+
+File: `backtest/v98_out/s9_*`, `s10_*`, `s11_*` (M1 OHLC), plan `plan_s9/s10/s11.json`.
+
+## 11. v2.00 / v2.01 / v2.02 — Rút gọn input 60 → 20 → 12 (16/11/2026)
+
+Theo yêu cầu "quá nhiều input". Bỏ hẳn code (không chỉ ẩn): lot theo Risk%, 5 chế độ SL (chỉ còn chân sóng `SL_SwingBars` + `SL_BufferATR`), 4 chế độ thoát (chỉ còn MA Stack break, không TP), BreakEven, 3 kiểu trailing, cutoff giờ, `MinMove24h_ATR`, `MaxSL_ATR`, `RequireSlowEMASlope`, trần/sàn SL. EMA 5/9/13/21/200, ATR 14, SL tối thiểu 3 pip, 6 nến quét nến tin thành hằng số. v2.00 còn giữ khung giờ `EntryStartHour`/`EntryEndHour`; **v2.01 bỏ luôn** (đã chốt 24/24) cùng `MaxTradesPerDay` (v2.01 hằng 3, **v2.02 bỏ hẳn**: EA chỉ giữ 1 lệnh mở nên giới hạn vô nghĩa, 3 năm chỉ 1 ngày chạm 3 lệnh, kết quả không đổi), `MaxFVG_AgeBars` (hằng 24), `RequireConfirmColor`, gộp 2 input vẽ thành `ShowVisual`, CSV log luôn bật. 12 input còn lại: `MagicNumber`, `FixedLot`, `EnableBuy`, `EnableSell`, `MaxSpreadPip`, `SignalTF`, `MinFVG_Pip`, `MinRejectWickRatio`, `SL_SwingBars`, `SL_BufferATR`, `SkipBigBar_ATR`, `ShowVisual`.
+
+Hồi quy v2.02 (M1 OHLC, $100k, FixedLot 100, default EA, đã dời `.set` cũ) trùng từng số với `s8_nobe_*` của v1.24:
+
+| Năm | Lệnh | sumR | Net $ | DD $ |
+|---|---|---|---|---|
+| 2024 | 128 | +12.69 | +5,918.62 | 8,186 |
+| 2025 | 136 | +65.13 | +27,731.61 | 28,754 |
+| 2026→01/11 | 103 | +29.83 | +128,583.90 | 14,295 |
+
+`run_v98.ps1`/`sweep_v98.ps1` đổi tham số theo v2.02 (default = default EA); plan `plan_s1…s11.json` dùng tên cũ nên chỉ còn giá trị tra cứu. File: `backtest/v98_out/v202_y24|y25|y26.csv`.
+
+## 12. Khung tín hiệu M5 / M15 / M30 / H1 — 2026 (16/11/2026)
+
+Theo yêu cầu "thử M5, M15, M30", chạy 2026-01-01 → 2026-11-01, M1 OHLC, $100k, FixedLot 100, mọi input mặc định v2.02, chỉ đổi `SignalTF` (ini `Period=M30` giữ nguyên, EA tự lấy nến theo `SignalTF`).
+
+| SignalTF | Lệnh | Win | PF | Net $ | DD $ (%) | Tổng R | Max 1 lệnh |
+|---|---|---|---|---|---|---|---|
+| M5  | 620 | 24.5% | 1.10 | +25,833 | 30,155 (20.7%) | +44.9 | +32.7R |
+| M15 | 206 | 28.3% | 1.18 | +23,527 | 30,880 (26.0%) | +25.1 | +15.9R |
+| **M30** | 103 | 31.4% | **2.63** | **+128,584** | **14,295 (7.9%)** | +29.8 | +8.8R |
+| H1  | 59  | 27.6% | 1.24 | +19,618 | 26,118 (22.8%) | −0.8 | +6.4R |
+
+Nhận xét: M5 có tổng R cao nhất (nhiều lệnh, SL hẹp) nhưng mỗi R chỉ đáng vài chục $ nên tiền kém 5 lần M30 và DD gấp đôi; M15/H1 đều lãi 1/5 M30 với DD 20–26%. M30 là khung duy nhất PF > 2 trong 2026. Chưa chạy M5/M15/H1 cho 2024–2025 (user chỉ yêu cầu 2026). File: `backtest/v98_out/tf5_y26|tf15_y26|tf30_y26|tfH1_y26.csv/.htm`.
+
+Trang tóm tắt chiến lược (artifact public, chia sẻ cho chuyên gia): https://claude.ai/artifact/TsxgfMwWy6Z1DZmitxiSpj — v6 có thêm mục "Chart từng lệnh năm 2026 trên M30" (102 lệnh, nến M30 + EMA 5/9/13/21/200, vào/SL/thoát, hộp FVG + vòng tròn nến từ chối từ CSV **v2.03** — EA chỉ thêm 6 cột log, kết quả trùng v2.02; 3 phạm vi xem Cận cảnh/Quanh điểm vào/Cả lệnh; dữ liệu nến xuất từ terminal test bằng Python MetaTrader5) và dòng so sánh khung thời gian trong bảng "đã thử và bỏ". Nguồn HTML: scratchpad phiên Claude `tyler-fvg-xauusd.html`.
