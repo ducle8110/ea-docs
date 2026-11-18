@@ -1,0 +1,221 @@
+================================================================================
+PHẢN BIỆN & ĐỀ XUẤT CẢI TIẾN ĐỊNH LƯỢNG — EA v98_TylerFVG (XAUUSD, M30)
+Đối chiếu: gemini_q.md & mã nguồn thực tế v98_TylerFVG.mq5 (v2.05)
+Ngày xuất: 18/11/2026
+================================================================================
+
+I. PHẢN BIỆN NHANH 3 BẪY THỐNG KÊ & CƠ HỌC TRONG KẾT QUẢ HIỆN TẠI
+--------------------------------------------------------------------------------
+1. Nghịch lý Simpson ở khoảng SL ($5.6 vs $10.9) & bẫy "nới SL giữ nguyên lot":
+   - Giá XAUUSD tăng gấp ~2.5 lần từ 2024 ($2,000–$2,700, ATR14 M30 ~$4–$6) lên
+     2026 ($4,500–$5,200, ATR14 ~$14–$25). Chia 366 lệnh theo SL tuyệt đối bằng
+     USD thực chất là đang chia theo năm / chế độ giá: nhóm SL <= $4.25 tập trung
+     ở 2024 (năm win rate 21%), còn SL > $16.8 nằm gần trọn ở 2026 (năm PF 2.63).
+     Ngay cả vậy, nhóm SL <= $4.25 dù bị quét 62% vẫn đạt +0.44R/lệnh — cao hơn
+     mức trung bình toàn mẫu (+0.294R/lệnh) nhờ mẫu số 1R nhỏ giúp bội số R thắng
+     rất lớn.
+   - Với phép thử đang chạy (nới sàn SL 0.5 / 1.0 / 1.5 * ATR, giữ nguyên lot = 1):
+     vì điểm thoát là MA_STACK_BREAK (độc lập với SL), nới SL chỉ cứu được một số
+     ít lệnh bị quét râu trong vùng đệm, nhưng phóng đại tiền lỗ USD ở mọi lệnh
+     vẫn chạm SL mới và nén mẫu số 1R làm giảm R của toàn bộ lệnh thắng lớn. Đồng
+     thời, lot = 1 cố định khiến rủi ro USD/lệnh năm 2026 phình gấp ~3–4 lần năm
+     2024 (giải thích vì sao 2026 chỉ +29.8R nhưng lãi +$128.6k, gấp 4.6 lần
+     +$27.7k của +65.1R năm 2025).
+
+2. Che khuất vị thế đơn (Single-Slot Censorship):
+   - EA chỉ giữ 1 lệnh mở tại một thời điểm; các siêu lệnh giữ 12h–48h+.
+   - Cắt/giữ một lệnh < 4h trên bảng CSV tĩnh sẽ làm thay đổi trạng thái rảnh của
+     EA và có thể vô tình chặn (hoặc mở khoá) lệnh lớn kế tiếp khi chạy lại trong
+     Strategy Tester.
+
+3. Hai khe hở cơ học ở Bước 1–2–3:
+   - FVG sống 24 nến nhưng không bị huỷ sau khi đã lấp / đã chạm, dẫn tới các lệnh
+     ở tuổi >= 2 nến đánh vào vùng thanh khoản đã cạn (giải thích trực tiếp tỷ lệ
+     quét SL vọt từ 25% lên 56%).
+   - Bước 2 cho phép nến từ chối SELL đóng cửa nằm hẳn phía trên đỉnh FVG (miễn
+     râu trên >= 40%); Bước 3 SELL lại huỷ kèo nếu nến xác nhận giảm mạnh đóng
+     thủng nhẹ low(từ chối), nhưng chấp nhận một nến tăng xanh hồi sát high(từ chối).
+
+
+II. CÁC ĐỀ XUẤT CẢI TIẾN CỤ THỂ, KIỂM CHỨNG ĐƯỢC
+--------------------------------------------------------------------------------
+[Đề xuất 1] Cơ chế FVG "Một lần chạm" (First-Touch Unmitigated) + khoá biên đóng
+            cửa nến từ chối
+- Điều kiện chính xác (công thức):
+  Với FVG giảm [F_bot, F_top] sinh tại nến t0 (BUY đối xứng ngược dấu):
+  (1) Huỷ sau lần chạm đầu tiên: Ngay sau nến đầu tiên t > t0 có High[t] >= F_bot,
+      đánh dấu FVG đã được kiểm định (nếu không thoả Bước 2, hoặc thoả Bước 2 nhưng
+      hỏng Bước 3, huỷ luôn FVG này không dùng lại cho các nến sau).
+  (2) Nến từ chối không đóng vượt biên xa FVG: Tại Bước 2 (SELL), yêu cầu thêm
+      Close_rej <= F_top (với BUY: Close_rej >= F_bot).
+- Lý do:
+  Xử lý đúng gốc rễ việc FVG tuổi >= 2 nến bị quét SL 56% (so với 25% ở 0–2 nến):
+  loại bỏ các kèo retest lần 2–3 vào vùng FVG đã bị hấp thụ hết lệnh chờ và loại
+  nến tăng phá đỉnh FVG nhưng vẫn mang râu trên 40%.
+- Rủi ro overfit:
+  Rất thấp (0 tham số số học mới) — thuần tuý sửa định nghĩa cấu trúc FVG chưa lấp,
+  bền hơn nhiều so với việc gán ngưỡng cắt cứng tuổi FVG <= K nến.
+- Cách đo trong backtest:
+  Chạy tách riêng (1A: chỉ thêm Close_rej <= F_top; 1B: thêm First-Touch) với rủi
+  ro cố định theo R. Đạt yêu cầu nếu tỷ lệ lệnh thua đủ -1R giảm ở cả 3 năm,
+  Expectancy (R/lệnh) tăng ở >= 2/3 năm và giữ nguyên được nhóm top 5 lệnh R lớn nhất.
+
+[Đề xuất 2] Khử bất đối xứng ở Nến Xác Nhận Bước 3 (Lọc chiều xác nhận & nới vách
+            đá cứng)
+- Điều kiện chính xác (công thức):
+  Tại Bước 3 cho lệnh SELL (BUY đối xứng):
+  - 2A (Chặn xác nhận ngược hướng): Giữ High_conf < High_rej, thay điều kiện dưới
+    bằng yêu cầu giá đóng nằm ở nửa thuận xu hướng của nến từ chối:
+      Low_rej <= Close_conf <= (High_rej + Low_rej) / 2
+  - 2B (Thay biên cứng bằng biên mềm theo biến động): Nới điều kiện dưới thành:
+      Close_conf >= Low_rej - 0.25 * ATR14[1]
+    để không bỏ lỡ nến xác nhận có xung lượng thật vừa chớm phá đáy nến từ chối.
+- Lý do:
+  Tránh bán khống ngay khi nến xác nhận là nến hồi tăng đóng sát đỉnh rejHigh (phe
+  mua đang hấp thụ râu trên), đồng thời tránh bỏ kèo tốt chỉ vì giá đóng vượt
+  rejLow vài xu.
+- Rủi ro overfit:
+  Thấp với 2A (dùng trung điểm hình học 0.5, 0 bậc tự do tinh chỉnh); Thấp–Trung bình
+  với 2B (1 tham số hệ số đệm 0.25).
+- Cách đo trong backtest:
+  Đo trước trên tập 366 lệnh hiện hữu xem phân nhóm có Close_conf nằm ở nửa nghịch
+  của nến từ chối có Expectancy (R) kém hơn nửa thuận ở cả 3 năm không; sau đó chạy
+  lại backtest tách rời 2A và 2B để kiểm tra tác động trễ slot.
+
+[Đề xuất 3] Lọc đồng thuận chế độ khung lớn H4 (Non-Repainting HTF Regime)
+- Điều kiện chính xác (công thức):
+  Tính EMA50 trên khung H4, chỉ đọc tại nến H4 đã đóng gần nhất (shift_H4 = 1, tuyệt
+  đối không đọc nến H4 đang chạy). Chỉ cho phép SELL khi:
+    Close_H4[1] < EMA50_H4[1]   (với BUY: Close_H4[1] > EMA50_H4[1])
+- Lý do:
+  Trên M30 chạy 24/24, một nhịp điều chỉnh 4–6 tiếng ngược xu hướng ngày vẫn đủ kéo
+  EMA 5/9/13/21 vượt qua EMA200 M30 trong vài nến; đây là nguồn sinh ra các chuỗi
+  lệnh < 4h bị quét liên tiếp khi sóng lớn H4 đập trả lại.
+- Rủi ro overfit:
+  Thấp (1 tham số chu kỳ chuẩn 50 trên khung gấp 8 lần khung tín hiệu). Tuy nhiên
+  có nguy cơ bỏ lỡ lệnh đảo chiều sớm đầu con sóng mới.
+- Cách đo trong backtest:
+  Gắn nhãn hậu nghiệm HTF_aligned thuộc {0, 1} cho 366 lệnh (chú ý dịch đúng giờ đóng
+  nến H4 trước open_time để không dính look-ahead bias); so sánh Expectancy (R) và
+  MaxDD (R) hai nhóm theo từng năm trước khi chạy lại tester toàn kỳ.
+
+[Đề xuất 4] Lọc hình học dải EMA chuẩn hoá theo ATR14 (Chống xếp chồng phẳng & đu
+            cuối sóng)
+- Điều kiện chính xác (công thức):
+  Tại nến vào lệnh (shift = 1), chuẩn hoá khoảng cách bằng ATR14[1]:
+    S_ribbon = |EMA5[1] - EMA21[1]| / ATR14[1]
+    D_200    = |Close[1] - EMA200[1]| / ATR14[1]
+  Kiểm định độc lập:
+  - 4A: chặn dải EMA xoắn phẳng S_ribbon >= theta_min (thử 0.20 hoặc 0.35)
+  - 4B: chặn kiệt sức quá xa trục D_200 <= theta_max (thử 6.0 hoặc 8.0)
+- Lý do:
+  Thứ tự 5 < 9 < 13 < 21 < 200 chỉ kiểm tra thứ hạng mà bỏ qua độ lớn. Khi giá đi
+  ngang thanh khoản thấp, 4 đường EMA ngắn chụm sát nhau cách vài chục cent vẫn thoả
+  bất đẳng thức nhưng gãy lại chỉ sau 1–2 nến; ngược lại khi D_200 quá căng, FVG
+  thường là khoảng trống kiệt sức (exhaustion gap). Chuẩn hoá theo ATR14 giúp ngưỡng
+  bất biến dù Vàng ở $2,000 hay $5,000.
+- Rủi ro overfit:
+  Trung bình (1 bậc tự do cho mỗi vế). Tuyệt đối không lọc kẹp 2 đầu cùng lúc nếu
+  chưa chứng minh được tính đơn điệu.
+- Cách đo trong backtest:
+  Chia 366 lệnh thành 5 phân vị bằng nhau (quintiles ~73 lệnh/nhóm) theo S_ribbon và
+  theo D_200. Chỉ đưa vào chạy tester nếu phân vị cực biên (Q1 của S_ribbon hoặc Q5
+  của D_200) có Expectancy (R) < 0 ở cả 3 năm.
+
+[Đề xuất 5] Chuẩn hoá Khối lượng theo Biến động (ATR-Parity Sizing) thay cho nới
+            sàn SL với lot cố định
+- Điều kiện chính xác (công thức):
+  Giữ nguyên công thức SL cấu trúc chân sóng 5 nến + 0.2 * ATR14 (không ép sàn
+  1.0–1.5 * ATR), thay lot = 1 cố định bằng định cỡ cân bằng biến động có trần rủi ro:
+    Lot = min( V_target / (C_contract * ATR14[1]),  R_max / (C_contract * SL_dist) )
+  trong đó C_contract = 100 oz/lot, V_target là ngân sách biến động mỗi 1 ATR
+  (ví dụ 0.5% vốn), và R_max là lỗ tối đa cho phép nếu chạm SL cứng (ví dụ 1.0% vốn).
+- Lý do:
+  Khắc phục triệt để cả hai méo mó hiện tại: (1) khử rủi ro lệch chế độ giá Vàng
+  giữa 2024 và 2026 của FixedLot, (2) tránh nhược điểm của định cỡ thuần 1 / SL_dist
+  (vốn đánh lot quá to vào các lệnh SL <= $4.25 dễ quét 62%, nhưng lại bóp nhỏ lot ở
+  nhóm SL ~ 1–2 ATR có xác suất thắng cao).
+- Rủi ro overfit:
+  Rất thấp — không làm thay đổi điểm vào/ra, chỉ chuẩn hoá phương sai chuỗi lợi nhuận
+  tiền tệ theo chế độ biến động hiện hành.
+- Cách đo trong backtest:
+  Áp công thức trực tiếp lên nhật ký giao dịch 366 lệnh (và chạy lại tester) để so
+  sánh tỷ số Return / MaxDD (Calmar / MAR) và Sharpe theo tháng giữa 3 chế độ:
+  FixedLot, % Risk theo SL, và ATR-Parity có trần SL.
+
+
+III. TRẢ LỜI 3 CÂU HỎI TRỌNG TÂM
+--------------------------------------------------------------------------------
+(1) Những đặc trưng nào khác đáng đo để lọc lệnh lỗ?
+    Khi đo trên XAUUSD 2024–2026, MỌI khoảng cách giá phải chia cho ATR14 (không đo
+    bằng $ hay % giá). Thứ tự ưu tiên đáng đo nhất:
+    1. Độ nguyên vẹn & độ xuyên thấu FVG (ưu tiên cao nhất):
+       - Số lần FVG đã bị chạm trước đó (touch_count).
+       - Tỷ lệ xuyên thấu (High_rej - F_bot) / (F_top - F_bot) (xuyên lố > 1.0 hay
+         chạm nông < 0.5).
+       - Vị trí đóng cửa của nến xác nhận trong biên độ nến từ chối.
+    2. Động học dải EMA (quan trọng hơn giá trị tĩnh):
+       - Độ bung/co quạt EMA:
+         Delta_S_ribbon = (|EMA5[1] - EMA21[1]| - |EMA5[4] - EMA21[4]|) / ATR14[1]
+         Phân biệt dải EMA đang mở rộng (xung lượng tăng tốc) với dải đang hội tụ
+         (sắp gãy thứ tự).
+       - Tuổi chuỗi xếp chồng (stack_age_bars): số nến M30 liên tiếp đã giữ đúng thứ
+         tự trước khi vào lệnh (quá trẻ 1–2 nến dễ là nhiễu vừa chớm; quá già > 50 nến
+         dễ là đu đỉnh/đáy sóng).
+       - Độ dốc trục chậm: dir * (EMA200[1] - EMA200[9]) / ATR14[1] (tránh bán khi 4
+         EMA ngắn xếp giảm nhưng EMA200 vẫn đang dốc lên).
+       - Khoảng cách chuẩn hoá tới EMA200: |Close[1] - EMA200[1]| / ATR14[1] (kiểm tra
+         dạng chữ U ngược ở 2 cực biên).
+    3. Biến động tương đối (Relative ATR):
+       ATR14[1] / Median(ATR14, 480 nến) — tách chế độ nén chặt với chế độ bùng nổ.
+    4. Phiên giờ (cần rất dè dặt):
+       Hiệu suất giữa phiên Á, Âu, Mỹ của Vàng hay đảo chiều theo năm (tuỳ dòng tiền
+       vật chất Châu Á vs lãi suất Mỹ). Chỉ đáng đo để loại khung giao thời thanh
+       khoản mỏng / giãn spread (23:00–02:00 Server) thay vì tối ưu giờ đẹp từng năm.
+
+(2) Có nên thoát lệnh khác (ví dụ EMA5 cắt EMA13) không, và rủi ro với phân phối
+    đuôi dài là gì?
+    - Lưu ý toán học quan trọng (Luật De Morgan): Luật thoát hiện tại
+      !(EMA5 < EMA9 < EMA13 < EMA21) KHÔNG PHẢI chờ "mất toàn bộ thứ tự", mà thoát
+      ngay khi BẤT KỲ 1 mắt xích nào gãy: !(5<9) OR !(9<13) OR !(13<21). Vì EMA5
+      nhanh nhất, thực tế > 95% lệnh thoát ngay lúc EMA5 cắt EMA9. Do đó, đổi sang
+      EMA5 cắt EMA13 là THOÁT CHẬM HƠN (nới lỏng) chứ không phải thoát sớm hơn.
+    - Hệ quả nếu đổi sang EMA5 cắt EMA13: Bạn đánh mất cơ chế "cắt lỗ mềm" (soft stop)
+      của EMA5 x EMA9 ở các lệnh sai hướng < 4h (lỗ trượt sâu hơn từ -0.4R về -1.0R
+      SL cứng), đồng thời trên Vàng các pha chạy nước rút +10R..+33R thường kết thúc
+      bằng đảo chiều chữ V rất gắt nên chờ EMA5 cắt EMA13 làm trả lại nhiều lợi nhuận
+      mở ở đỉnh sóng.
+    - Rủi ro với phân phối đuôi dài (Right-Tail Truncation): Với win rate ~30%, toàn
+      bộ kỳ vọng dương nằm ở độ lệch phải (5–8% lệnh lớn nhất gánh trọn lợi nhuận
+      ròng). Mọi cơ chế chạm vào lệnh đang thắng (TP cứng, chốt lời một phần,
+      trailing stop sát, hoặc dời BE quá sớm bị râu quét hoà trước khi giá chạy +20R)
+      đều gọt cụt đuôi phải trong khi giữ nguyên tần suất thua ~70%, làm sụp PF.
+    - Kết luận: Không nên thay cơ chế thoát chính. Nếu muốn kiểm chứng điểm yếu duy
+      nhất của EMA5 x EMA9 (dải 5–9 vốn đang co hẹp sẵn ngay sau nhịp hồi Bước 2–3 dễ
+      bị rung nhiễu), chỉ nên thử quy tắc ân hạn 2 nến đầu (trong 2 nến M30 đầu sau
+      khớp chỉ thoát sớm khi EMA5 cắt EMA13, từ nến thứ 3 trở về MA_STACK_BREAK chuẩn).
+
+(3) Cách tránh overfit khi chỉ có ~370 lệnh / 3 năm?
+    Với N = 366 và phân phối đuôi dày (sigma_R ~ 2.6–3.0R), sai số chuẩn của kỳ vọng
+    trung bình là SE(R_mean) = sigma_R / sqrt(N) ~ 0.14R toàn kỳ và ~ 0.25R trên mỗi
+    năm (~120 lệnh) — chỉ 1 lệnh +25R đã dịch chuyển kỳ vọng năm thêm +0.21R. Để
+    tránh overfit:
+    1. Đo bằng Winsorized R (cắt trần đuôi phải khi chấm điểm): Khi so sánh bộ lọc,
+       luôn tính thêm Expectancy (R) sau khi kẹp trần mọi lệnh ở +10R (hoặc bỏ 3 lệnh
+       lớn nhất). Bộ lọc chỉ thật sự lọc được lệnh lỗ nếu vẫn thắng baseline trên
+       thước đo đã kẹp trần; nếu chỉ thắng nhờ giữ được 1–2 siêu lệnh thì coi là nhiễu.
+    2. Luật đơn điệu phân vị (Monotonicity): Chỉ lọc biến liên tục nếu khi chia 5
+       phân vị, kỳ vọng R tăng/giảm đơn điệu xuyên suốt và giữ đúng chiều ở cả 3 năm.
+       Cấm tuyệt đối lọc bỏ một dải nằm kẹp ở giữa (như dải FVG $3–$5 đã loại bỏ).
+    3. Ngân sách bậc tự do <= 2: Với ~110 lệnh thắng trong mẫu, không thêm quá 1–2
+       tham số ngưỡng mới; ưu tiên cải tiến 0 tham số (logic cấu trúc như Đề xuất 1,
+       2A) và kiểm tra vùng phẳng tham số +-20% (parameter plateau).
+    4. Kiểm tra chi phí cơ hội do lệch slot: Mỗi khi thử bộ lọc trong Strategy Tester,
+       tách riêng phần chênh lệch R đến từ (lệnh cũ bị lọc bỏ) so với (lệnh mới phát
+       sinh do trống vị thế).
+    5. Tạo mẫu ngoài thật sự trước 2024 (True OOS): Toàn bộ 2024–2026 đã bị nhìn qua
+       hàng chục phép chia (data snooping). Sau khi chốt tối đa 1–2 ứng viên tốt nhất,
+       kéo dữ liệu M1 XAUUSD giai đoạn 2020–2023 và chỉ chạy kiểm định đúng 1 lần duy
+       nhất (không quay lại sửa tham số), kết hợp khoá bản chạy forward/demo tối thiểu
+       30–50 lệnh.
+================================================================================

@@ -1,8 +1,8 @@
 ================================================================================
-TÀI LIỆU BÀN GIAO — EA v98_TylerFVG (v2.04)
+TÀI LIỆU BÀN GIAO — EA v98_TylerFVG (v2.06)
 Chiến lược: Tyler Goedtel (TG Capital) — London Session FVG + EMA Stack, khung M30
 Cập nhật: 16/11/2026 — bản hiệu đính trên nền bản v1.20 (Gemini) sau khi đối chiếu
-          lại code, CSV lệnh và báo cáo backtest. v2.02 rút gọn input còn 12, bỏ giới hạn lệnh/ngày; v2.03 CSV lệnh thêm 6 cột FVG/nến từ chối; v2.04 dashboard mới + 5 EMA trên chart (mục 6, 7).
+          lại code, CSV lệnh và báo cáo backtest. v2.02 rút gọn input còn 12, bỏ giới hạn lệnh/ngày; v2.03 CSV lệnh thêm 6 cột FVG/nến từ chối; v2.04 dashboard mới + 5 EMA trên chart; v2.05 nạp FVG lịch sử khi khởi động; v2.06 (18/11/2026) lọc thị trường lặng + cắt lệnh ì (mục 6, 7; nghiên cứu: docs/V98_RESEARCH_LOC_LENH.md).
 Thư mục gốc: C:\Users\duc\Documents\project\tool
 ================================================================================
 
@@ -205,6 +205,13 @@ f) Những gì CÓ cơ sở từ dữ liệu (bền qua nhiều cấu hình, kh�
     EnableBuy true | EnableSell true | MaxSpreadPip 50 ($0.50) | SignalTF M30
     MinFVG_Pip 20 | MinRejectWickRatio 0.40 | SL_SwingBars 5 | SL_BufferATR 0.20
     SkipBigBar_ATR 0 (đặt 2.5 nếu muốn né lệnh ngay sau tin) | ShowVisual true
+  v2.04 thêm ShowEMA true. v2.06 thêm 2 input (tổng 15):
+    QuietATR_Ratio 0.70 — MẶC ĐỊNH BẬT: bỏ tín hiệu khi ATR(14) nến xác nhận < 0.70 × trung vị ATR 480 nến (0 = tắt)
+    TimeStopBars 0      — MẶC ĐỊNH TẮT: đóng lệnh nếu sau N nến giá đóng vẫn bất lợi so với giá vào (đề xuất 10)
+  Số chuẩn v2.06 mặc định (M1 OHLC, $100k, 1 lot chuẩn, vốn reset mỗi năm):
+    2024 +$8,229 / +20.48R / 109 lệnh / PF 1.28 | 2025 +$32,856 / +71.32R / 128 / PF 1.56
+    2026→01/11 +$128,306 / +26.00R / 96 / PF 2.72
+  (đặt QuietATR_Ratio = 0 thì trùng từng số với v2.02–v2.05 ở dòng "Hồi quy v2.02" bên dưới)
   Cố định trong code (không còn input): chạy 24/24; 1 lệnh mở tại một thời điểm, không giới hạn lệnh/ngày;
   FVG sống 24 nến; EMA 5/9/13/21/200; ATR 14; SL tối thiểu 3 pip; 6 nến quét nến tin;
   SL = chân sóng (nến từ chối + 5 nến) − 0.2 ATR; không TP, không BE, không trailing;
@@ -249,8 +256,34 @@ f) Những gì CÓ cơ sở từ dữ liệu (bền qua nhiều cấu hình, kh�
   Nếu vẫn muốn thử: MinFVG_Pip 1–2, SL_BufferPip 1–2, EnableSell true.
 
 
-7. THAY ĐỔI v1.21 … v2.04 (so với v1.20 của Gemini) — logic tín hiệu KHÔNG đổi
+7. THAY ĐỔI v1.21 … v2.06 (so với v1.20 của Gemini) — từ v2.06 có thêm một bộ lọc vào lệnh
 --------------------------------------------------------------------------------
+v2.06 (18/11/2026): hai cải tiến duy nhất qua được đợt nghiên cứu ~250 cấu hình trên 9 năm (docs/V98_RESEARCH_LOC_LENH.md).
+  - Lọc thị trường lặng (QuietATR_Ratio = 0.70, mặc định BẬT theo yêu cầu người dùng): trong ExecuteTylerEntry, nếu
+    ATR(14) của nến vừa đóng / trung vị ATR của 480 nến đã đóng gần nhất (GetAtrRatio, tính 1 lần mỗi nến) < 0.70 thì
+    bỏ tín hiệu, trạng thái "Bỏ qua: thị trường lặng". Dashboard: dòng FVG thêm "ATR 0.85x", đổi cam + chữ LẶNG khi dưới ngưỡng;
+    dòng trạng thái mặc định cũng báo đang lặng. Chưa đủ 480 nến ATR thì không chặn.
+  - Cắt lệnh ì (TimeStopBars = 0, mặc định TẮT theo yêu cầu người dùng): trong CheckExitOnBarClose, sau khi kiểm tra EMA,
+    nếu lệnh đã giữ ≥ N nến (iBarShift của giờ mở lệnh; nến vào lệnh vừa đóng = 1) và giá đóng bất lợi so với giá vào
+    thì đóng, lý do CSV "TIME_STOP". Đề xuất N = 10.
+  - Hồi quy (bản MT5 riêng C:\MT5_Test, M1 OHLC, XAUUSD.sc, 1 lot chuẩn):
+      tắt cả hai, 2026→01/11: 103 lệnh, +$128,583.90, PF 2.63 — trùng v2.05 từng xu.
+      15/6/2022→18/11/2026: gốc 550 lệnh +$151,755 PF 1.69 DD 19.9% | mặc định v2.06 499 lệnh +$161,308 PF 1.80 DD 16.3%
+        | thêm TimeStopBars 10: 499 lệnh +$168,076 PF 1.86 DD 14.6% (tốt hơn gốc ở cả 5 năm).
+      Tick thật 8/1→18/11/2026: gốc +$127,409 PF 2.53 | mặc định +$127,286 PF 2.61 | thêm TimeStop 10 +$129,795 PF 2.70.
+      XAUUSD 7/2018→6/2022 (ngoại tuyến, bản nghiên cứu): gốc +$21,042 PF 1.22 | lọc lặng + time stop +$28,737 PF 1.33.
+  - run_v98.ps1: thêm -QuietATR (0.70) và -TimeStop (0); chạy trong C:\MT5_Test /portable, không tắt terminal người dùng.
+  - Dashboard vẽ lại theo yêu cầu "chữ nhỏ + lộn xộn, chia theo section": hộp 620px, chữ nội dung 10pt (trước 9pt), dòng xu hướng 12pt,
+    4 section có tiêu đề + đường kẻ (XU HƯỚNG EMA / ĐIỀU KIỆN VÀO LỆNH / LỆNH / TRẠNG THÁI), mỗi thông tin một dòng "tên — giá trị"
+    thẳng cột (SetSection, SetRow, SetRect). Dòng mới: "Biến động" (ATR so với trung vị, cam + LẶNG khi dưới ngưỡng) và "Đang mở"
+    (chiều, lot, giá vào, SL, lãi/lỗ tạm theo R). Khoảng cách tới EMA21/EMA200 ghi theo đơn vị giá thay cho pip.
+    Bề rộng tính cho Windows phóng 125% (~9px/ký tự Consolas 10pt). Bảng tự dựng lại khi có mũi tên/lệnh mới (g_dashToFront)
+    để luôn nằm trên các dấu tín hiệu. Đã chụp kiểm tra bằng tester trực quan; nút thu gọn chưa bấm thử được trong tester.
+v2.05 (18/11/2026): khởi động là quét lại 96 nến M30 gần nhất (WarmUpFVGs, gọi ở tick đầu tiên khi
+  chỉ báo đã tính xong) để nạp FVG còn sống và vẽ cả FVG đã chết trong 2 ngày qua. Trước đây EA chỉ biết
+  FVG sinh ra sau lúc bật, nên vừa gắn lên chart luôn "FVG 0" và bỏ sót setup đang dở (FVG sống 12h).
+  Chỉ chạy lại Bước 1, KHÔNG vào lệnh cho nến từ chối/xác nhận đã qua; nến vừa đóng vẫn đi luồng thường.
+  Hồi quy 2026 (Model 1): 103 lệnh, +$128,583.90, PF 2.63, DD 7.9% — trùng v2.04.
 v2.04 (17/11/2026): CHỈ đổi hiển thị, logic/kết quả trùng v2.02–v2.03 (2026: 103 lệnh, +$128,583.90).
   - Dòng "Trạng thái" trên dashboard trước đây là chuỗi mặc định "Đang chờ phiên London..." sót từ bản
     còn lọc phiên, chỉ bị ghi đè khi có sự kiện. Nay mỗi nến đóng EA tự ghi: "Nến HH:MM: EMA chưa xếp
