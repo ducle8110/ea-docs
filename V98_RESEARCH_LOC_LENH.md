@@ -111,6 +111,7 @@ Số liệu là chênh lệch so với gốc trên 9 năm trừ khi ghi khác.
 | Thời gian | bỏ phiên Á, bỏ thứ Sáu, chỉ giờ 7–20 / 8–18 / 10–17 server | R tăng nhưng $ giảm, không nhất quán |
 | Chiều | chỉ BUY / chỉ SELL | mỗi chiều thắng ở những năm khác nhau |
 | Vào lại theo xu hướng | sau khi thoát theo EMA, trong 3–24 nến mà EMA xếp chồng lại thì vào ngay (không chờ FVG), có/không đòi lệnh trước lãi ≥ 0–4R | tất cả âm (−$10k…−$60k): bước FVG + nến từ chối + xác nhận thật sự có giá trị |
+| Số vùng FVG / sóng đã chạy xa | bỏ lệnh khi đã có ≥ 3/4/5 vùng FVG cùng chiều, khi đợt xếp chồng đã sinh ≥ 3/5 FVG, khi giá đã chạy > 4/7 ATR từ đầu đợt, khi giá cách EMA21 > 1,5–4 ATR, khi giá cách cụm FVG > 3/6 ATR (`fvgcount.py`, `fvgcount2.py`, nền v2.06) | tất cả âm: bỏ ≥ 4 vùng −$50k, bỏ ≥ 3 vùng −$105k. Ngược với trực giác: nhóm ≥ 4 vùng là nhóm TỐT nhất (152 lệnh, thắng 37%, +0,36 Rw/lệnh so với 0,11–0,12 của nhóm 1–3 vùng, 30% tổng lãi). Nến từ chối luôn khớp với vùng MỚI NHẤT (943/943 lệnh) |
 | Nhồi lệnh | tối đa 2/3/5 lệnh, nhồi khi lệnh đầu ≥ 0–3R, có/không dời SL chung | +$6k…+$16k nhưng DD 17% → 20–22%, năm 2026 âm; thực chất là tăng khối lượng |
 | Khung | H1 song song | H1 không có lợi thế |
 | Chi phí / biến động khác | spread ≤ 3–15% ATR, SL ≥ 5–24× spread, ATR đang tăng so với 8/24 nến trước | không cái nào hơn Q; Q không chỉ là đại diện cho chi phí |
@@ -205,7 +206,39 @@ Lot cố định thực chất là **rủi ro tăng dần theo giá vàng**: ATR
 Nó thắng ở 2023–2026 vì năm tốt nhất trùng với năm ATR cao nhất. Trên 9 năm, rủi ro cố định theo SL cho đường vốn đều hơn.
 Đây là quyết định của người dùng (hiện chọn lot cố định); mô phỏng chưa tính trượt giá cho lệnh SL rất hẹp.
 
-## 7. Tái lập
+## 7. Cùng bộ luật trên BTC, ETH, forex (18/11/2026)
+
+Câu hỏi: setup này có thắng trên mã khác không? Chạy đúng luật v2.06 mặc định, M30, 6/2018–11/2026 (`xasset.py`, `xasset2.py`, `xasset_h1.py`).
+Dữ liệu: `BTCUSD.sc` và 7 cặp forex từ Vantage (có spread thật); ETH không có trên tài khoản này nên lấy nến 30 phút công khai của
+Binance (`fetch_binance.py`, chi phí giả định 0,04% giá khứ hồi). Đo bằng R vì lot và giá mỗi mã khác nhau; FVG tối thiểu đặt 0,03 ATR.
+
+| Mã | Lệnh | Thắng | Tổng R | PF theo R | Năm lãi/lỗ | R mỗi lệnh nếu KHÔNG có chi phí | Chi phí mỗi lệnh |
+|---|---|---|---|---|---|---|---|
+| Vàng (đối chứng) | 975 | 28% | +251 | 1,51 | 7/2 | +0,31 | 0,05R |
+| BTC (Vantage) | 1.218 | 22% | −74 | 0,89 | 3/6 | −0,02 | 0,05R |
+| BTC (Binance) | 1.431 | 21% | −251 | 0,69 | 0/9 | −0,11 | 0,07R |
+| ETH (Binance) | 1.521 | 25% | −64 | 0,92 | 4/5 | +0,01 | 0,06R |
+| EURUSD | 958 | 23% | −201 | 0,64 | 0/9 | −0,10 | 0,13R |
+| GBPUSD | 1.006 | 24% | −127 | 0,77 | 1/8 | +0,02 | 0,11R |
+| USDJPY | 1.112 | 27% | +59 | 1,10 | 5/4 | +0,19 | 0,12R |
+| AUDUSD | 1.128 | 22% | −223 | 0,66 | 0/9 | −0,02 | 0,17R |
+| USDCAD | 1.063 | 26% | −178 | 0,69 | 0/9 | −0,06 | 0,13R |
+| NZDUSD | 1.135 | 24% | −265 | 0,60 | 0/9 | −0,10 | 0,18R |
+| USDCHF | 1.006 | 22% | −239 | 0,60 | 0/9 | −0,03 | 0,16R |
+
+- Lợi thế của setup là **riêng của vàng M30**. BTC, ETH và 6/7 cặp forex không có lợi thế ngay cả khi chi phí bằng 0.
+- Forex còn bị thêm một đòn: spread chiếm 10–19% ATR của nến M30 (vàng chỉ 4%), tức mỗi lệnh mất 0,11–0,18R tiền phí.
+- USDJPY là ngoại lệ duy nhất có lợi thế gộp (+0,19R/lệnh, 8/9 năm dương khi không tính phí) nhưng spread ăn gần hết; phần còn lại
+  dồn vào 2022–2024 (yên mất giá mạnh), 2025–2026 âm, và kẹp trần 10R thì tổng còn −3R → không đủ tin để chạy.
+- Khung H1 cho các mã này cũng không có gì (BTC H1 +99R nhưng kẹp trần 10R còn −39R: chỉ là 2–3 lệnh khổng lồ năm 2019 và 2023).
+- MT5 thật, EA v2.06, 7/2018–11/2026 (`backtest/v98_out/x_*.csv`), khớp với mô phỏng:
+  - `BTCUSD.sc` (lot 100 = 1 BTC, `MaxSpreadPip` 0, `MinFVG_Pip` 900): 1.145 lệnh, −41,7R, PF 0,86, DD 44%, lỗ 6/9 năm.
+  - `EURUSD` (1 lot, `MinFVG_Pip` 0,3): 924 lệnh, −182,8R, PF 0,66, lỗ cả 9 năm.
+  - `USDJPY` (1 lot, `MinFVG_Pip` 0,4): 1.072 lệnh, +83,7R, PF 1,14, +$10,4k, DD 5,1%; theo năm 18:−1 19:−17 20:+5 21:+16 22:+42 23:+36 24:+19 25:−8 26:−8.
+- Lưu ý nếu vẫn muốn thử EA trên mã khác: `MaxSpreadPip` 50 tính theo pip của mã (BTC: 50 pip = 0,50$ nên EA sẽ không bao giờ vào
+  lệnh nếu không đặt 0); `MinFVG_Pip` 20 với forex 5 số là 20 pip thật, phải hạ xuống cỡ 0,3–2.
+
+## 8. Tái lập
 
 ```powershell
 cd backtest\v98_research
